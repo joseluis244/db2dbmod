@@ -1,8 +1,22 @@
-package mysqlv1
+package change
 
-import "github.com/joseluis244/db2dbmod/models"
+import (
+	"database/sql"
 
-func (m *MySQLv1) LastChange() (int64, error) {
+	"github.com/joseluis244/db2dbmod/models"
+)
+
+type ChangeStruct struct {
+	client *sql.DB
+}
+
+func New(client *sql.DB) *ChangeStruct {
+	return &ChangeStruct{
+		client: client,
+	}
+}
+
+func (m *ChangeStruct) LastChange() (int64, error) {
 	q := `SELECT value FROM GlobalIntegers;`
 	var value int64
 	if err := m.client.QueryRow(q).Scan(&value); err != nil {
@@ -11,7 +25,7 @@ func (m *MySQLv1) LastChange() (int64, error) {
 	return value, nil
 }
 
-func (m *MySQLv1) ChangesRange(from int64, to int64) ([]models.SourceMySQLv1ChangesType, error) {
+func (m *ChangeStruct) ChangesRange(from int64, to int64) ([]models.SourceMySQLv1ChangesType, error) {
 	q := `SELECT * FROM Changes where (changeType<10 and changeType!=3) and seq>=? and seq<=?;`
 	rows, err := m.client.Query(q, from, to)
 	if err != nil {

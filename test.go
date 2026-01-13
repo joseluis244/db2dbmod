@@ -29,3 +29,42 @@ func main() {
 	destdb.InsertInstanceRawModel(instance)
 	clouddb.InsertInstanceRawModel(instance)
 }
+
+func test() {
+	arrCompleto := []interface{}{}
+	lenSt := funcionparacontarestudios(arrCompleto)
+	lenSer := funcionparacontarseries(arrCompleto)
+	lenInst := funcionparacontarinstancias(arrCompleto)
+	var Stchan = make(chan interface{}, lenSt)
+	var Serchan = make(chan interface{}, lenSer)
+	var Instchan = make(chan interface{}, lenInst)
+	for _, item := range arrCompleto {
+		switch item.T {
+		case "Study":
+			go func(item interface{}) {
+				//hacer algo co el estudio
+				Stchan <- item //solo ejemplo
+			}(item)
+		case "Series":
+			go func(item interface{}) {
+				//hacer algo co la serie
+				Serchan <- item //solo ejemplo
+			}(item)
+		case "Instance":
+			go func(item interface{}) {
+				//hacer algo co la instancia
+				Instchan <- item //solo ejemplo
+			}(item)
+		}
+	}
+	for i := len(arrCompleto); i > 0; i-- {
+		select {
+		case <-Stchan:
+			//hacer algo co el estudio
+		case <-Serchan:
+			//hacer algo co la serie
+		case <-Instchan:
+			//hacer algo co la instancia
+		}
+	}
+}
