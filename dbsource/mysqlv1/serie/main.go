@@ -3,9 +3,14 @@ package serie
 import (
 	"database/sql"
 
-	"github.com/joseluis244/db2dbmod/models"
 	"github.com/joseluis244/db2dbmod/utils"
 )
+
+type SourceMySQLv1SerieType struct {
+	StudyUuid string                 `json:"StudyUuid"`
+	SerieUuid string                 `json:"SerieUuid"`
+	Tags      map[string]interface{} `json:"Tags"`
+}
 
 type raw struct {
 	StudyUuid  string `json:"StudyUuid"`
@@ -25,7 +30,7 @@ func New(client *sql.DB) *SerieStruct {
 	}
 }
 
-func (s *SerieStruct) GetSerieById(id string) (models.SourceMySQLv1SerieType, error) {
+func (s *SerieStruct) GetSerieById(id int64) (SourceMySQLv1SerieType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -38,10 +43,10 @@ left join(SELECT * FROM MainDicomTags) SerieTags on SerieTags.id = resourseSerie
 where resourseSerie.internalId=?;`
 	rows, err := s.client.Query(q, id)
 	if err != nil {
-		return models.SourceMySQLv1SerieType{}, err
+		return SourceMySQLv1SerieType{}, err
 	}
 	defer rows.Close()
-	var result models.SourceMySQLv1SerieType = models.SourceMySQLv1SerieType{
+	var result SourceMySQLv1SerieType = SourceMySQLv1SerieType{
 		StudyUuid: "",
 		SerieUuid: "",
 		Tags:      map[string]interface{}{},
@@ -49,7 +54,7 @@ where resourseSerie.internalId=?;`
 	for rows.Next() {
 		serie := raw{}
 		if err := rows.Scan(&serie.StudyUuid, &serie.SerieUuid, &serie.TagGroup, &serie.TagElement, &serie.Value); err != nil {
-			return models.SourceMySQLv1SerieType{}, err
+			return SourceMySQLv1SerieType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" {
 			result.StudyUuid = serie.StudyUuid
@@ -61,7 +66,7 @@ where resourseSerie.internalId=?;`
 	return result, nil
 }
 
-func (s *SerieStruct) GetSerieBySerieUuid(uuid string) (models.SourceMySQLv1SerieType, error) {
+func (s *SerieStruct) GetSerieBySerieUuid(uuid string) (SourceMySQLv1SerieType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -74,10 +79,10 @@ left join(SELECT * FROM MainDicomTags) SerieTags on SerieTags.id = resourseSerie
 where resourseSerie.publicId=?;`
 	rows, err := s.client.Query(q, uuid)
 	if err != nil {
-		return models.SourceMySQLv1SerieType{}, err
+		return SourceMySQLv1SerieType{}, err
 	}
 	defer rows.Close()
-	var result models.SourceMySQLv1SerieType = models.SourceMySQLv1SerieType{
+	var result SourceMySQLv1SerieType = SourceMySQLv1SerieType{
 		StudyUuid: "",
 		SerieUuid: "",
 		Tags:      map[string]interface{}{},
@@ -85,7 +90,7 @@ where resourseSerie.publicId=?;`
 	for rows.Next() {
 		serie := raw{}
 		if err := rows.Scan(&serie.StudyUuid, &serie.SerieUuid, &serie.TagGroup, &serie.TagElement, &serie.Value); err != nil {
-			return models.SourceMySQLv1SerieType{}, err
+			return SourceMySQLv1SerieType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" {
 			result.StudyUuid = serie.StudyUuid
@@ -97,7 +102,7 @@ where resourseSerie.publicId=?;`
 	return result, nil
 }
 
-func (s *SerieStruct) GetSerieByStudyUuid(uuid string) ([]models.SourceMySQLv1SerieType, error) {
+func (s *SerieStruct) GetSerieByStudyUuid(uuid string) ([]SourceMySQLv1SerieType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -114,8 +119,8 @@ ORDER BY resourseSerie.publicId;`
 		return nil, err
 	}
 	defer rows.Close()
-	var result []models.SourceMySQLv1SerieType
-	var currentSerie models.SourceMySQLv1SerieType = models.SourceMySQLv1SerieType{
+	var result []SourceMySQLv1SerieType
+	var currentSerie SourceMySQLv1SerieType = SourceMySQLv1SerieType{
 		StudyUuid: "",
 		SerieUuid: "",
 		Tags:      map[string]interface{}{},
@@ -126,20 +131,15 @@ ORDER BY resourseSerie.publicId;`
 			return nil, err
 		}
 		if serie.SerieUuid != currentSerie.SerieUuid {
-			if currentSerie.SerieUuid != "" {
-				result = append(result, currentSerie)
-			}
-			currentSerie = models.SourceMySQLv1SerieType{
+			currentSerie = SourceMySQLv1SerieType{
 				StudyUuid: serie.StudyUuid,
 				SerieUuid: serie.SerieUuid,
 				Tags:      map[string]interface{}{},
 			}
+			result = append(result, currentSerie)
 		}
 		tag := utils.Dec2Hex(serie.TagGroup, serie.TagElement)
-		currentSerie.Tags[tag] = serie.Value
-	}
-	if currentSerie.SerieUuid != "" {
-		result = append(result, currentSerie)
+		result[len(result)-1].Tags[tag] = serie.Value
 	}
 	return result, nil
 }

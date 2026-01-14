@@ -3,19 +3,29 @@ package mongodb
 import (
 	"context"
 
+	"github.com/joseluis244/db2dbmod/destination/mongodb/instance"
+	"github.com/joseluis244/db2dbmod/destination/mongodb/serie"
+	"github.com/joseluis244/db2dbmod/destination/mongodb/study"
+	"github.com/joseluis244/db2dbmod/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type MongoDB struct {
-	client *mongo.Client
-	db     string
+	client   *mongo.Client
+	db       string
+	Study    *study.StudyStruct
+	Series   *serie.SerieStruct
+	Instance *instance.InstanceStruct
 }
 
 func New() *MongoDB {
 	return &MongoDB{
-		client: nil,
-		db:     "",
+		client:   nil,
+		db:       "",
+		Study:    nil,
+		Series:   nil,
+		Instance: nil,
 	}
 }
 
@@ -29,6 +39,9 @@ func (m *MongoDB) Connect(dsn string, db string) error {
 	}
 	m.client = client
 	m.db = db
+	m.Study = study.New(client, db, models.DestinationStudyCollection)
+	m.Series = serie.New(client, db, models.DestinationSeriesRawCollection)
+	m.Instance = instance.New(client, db, models.DestinationInstanceRawCollection)
 	return nil
 }
 

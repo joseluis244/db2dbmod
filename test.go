@@ -1,70 +1,72 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/joseluis244/db2dbmod/builder"
-	"github.com/joseluis244/db2dbmod/destination"
+	"github.com/joseluis244/db2dbmod/builder/mysqlv12mogo"
+	"github.com/joseluis244/db2dbmod/dbsource"
+	"github.com/joseluis244/db2dbmod/dbsource/mysqlv1"
 )
 
 func main() {
-	clouddb := destination.MongoDB.New()
-	clouddb.Connect("mongodb://localhost:27017", "test")
-	defer clouddb.Disconnect()
-	destdb := destination.MongoDB.New()
-	destdb.Connect("mongodb://localhost:27017", "test")
-	defer destdb.Disconnect()
-	instance, err := builder.BuildInstanceRaw([]byte(`{
-		"Uuid": "test",
-		"Ae": "test",
-		"Tags": {},
-		"StudyUuid": "test",
-		"SerieUuid": "test",
-		"Hash": "test",
-		"Size": 0,
-		"Path": "test",
-		"Store": "test"
-	}`), 0)
+	t := time.Now()
+	mysql := dbsource.MySQLv1.New()
+	mysql.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
+	defer mysql.Disconnect()
+	Builder := builder.Mysqlv12Mogo.New("MedicareSoftMongo", "test1", "sucursal1")
+	lastChange, err := mysql.Change.LastChange()
 	if err != nil {
 		panic(err)
 	}
-	destdb.InsertInstanceRawModel(instance)
-	clouddb.InsertInstanceRawModel(instance)
+	changes, err := mysql.Change.ChangesRange(0, lastChange)
+	if err != nil {
+		panic(err)
+	}
+	for _, change := range changes {
+		switch change.ResourceType {
+		case "1":
+			estudio(change.InternalId, mysql, Builder)
+		case "2":
+			serie(change.InternalId, mysql, Builder)
+		case "3":
+			instance(change.InternalId, mysql, Builder)
+		}
+	}
+	fmt.Println(time.Since(t))
 }
 
-func test() {
-	arrCompleto := []interface{}{}
-	lenSt := funcionparacontarestudios(arrCompleto)
-	lenSer := funcionparacontarseries(arrCompleto)
-	lenInst := funcionparacontarinstancias(arrCompleto)
-	var Stchan = make(chan interface{}, lenSt)
-	var Serchan = make(chan interface{}, lenSer)
-	var Instchan = make(chan interface{}, lenInst)
-	for _, item := range arrCompleto {
-		switch item.T {
-		case "Study":
-			go func(item interface{}) {
-				//hacer algo co el estudio
-				Stchan <- item //solo ejemplo
-			}(item)
-		case "Series":
-			go func(item interface{}) {
-				//hacer algo co la serie
-				Serchan <- item //solo ejemplo
-			}(item)
-		case "Instance":
-			go func(item interface{}) {
-				//hacer algo co la instancia
-				Instchan <- item //solo ejemplo
-			}(item)
-		}
+func estudio(internalId int64, mysql *mysqlv1.MySQLv1, Builder *mysqlv12mogo.BuilderStruct) {
+	study, err := mysql.Study.GetStudyById(internalId)
+	if err != nil {
+		panic(err)
 	}
-	for i := len(arrCompleto); i > 0; i-- {
-		select {
-		case <-Stchan:
-			//hacer algo co el estudio
-		case <-Serchan:
-			//hacer algo co la serie
-		case <-Instchan:
-			//hacer algo co la instancia
-		}
+	model, err := Builder.Study.Move2Mongo(study)
+	if err != nil {
+		panic(err)
 	}
+	fmt.Println(model)
+}
+func serie(internalId int64, mysql *mysqlv1.MySQLv1, Builder *mysqlv12mogo.BuilderStruct) {
+	serie, err := mysql.Serie.GetSerieById(internalId)
+	if err != nil {
+		panic(err)
+	}
+	model, err := Builder.Series.Move2Mongo(serie)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(model)
+}
+func instance(internalId int64, mysql *mysqlv1.MySQLv1, Builder *mysqlv12mogo.BuilderStruct) {
+	instance, err := mysql.Instance.GetInstanceById(internalId)
+	if err != nil {
+		panic(err)
+	}
+	model, err := Builder.Instance.Move2Mongo(instance)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(model)
 }

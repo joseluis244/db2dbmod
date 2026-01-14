@@ -2,10 +2,20 @@ package instance
 
 import (
 	"database/sql"
+	"strconv"
 
-	"github.com/joseluis244/db2dbmod/models"
 	"github.com/joseluis244/db2dbmod/utils"
 )
+
+type SourceMySQLv1InstanceType struct {
+	StudyUuid    string                 `json:"StudyUuid"`
+	SerieUuid    string                 `json:"SerieUuid"`
+	InstanceUuid string                 `json:"InstanceUuid"`
+	Hash         string                 `json:"Hash"`
+	Size         int64                  `json:"Size"`
+	AE           string                 `json:"AE"`
+	Tags         map[string]interface{} `json:"Tags"`
+}
 
 type raw struct {
 	StudyUuid    string `json:"StudyUuid"`
@@ -19,6 +29,10 @@ type raw struct {
 	Value        string `json:"Value"`
 }
 
+var intTags = map[string]bool{
+	"0020,0013": true,
+}
+
 type InstanceStruct struct {
 	client *sql.DB
 }
@@ -29,7 +43,7 @@ func New(client *sql.DB) *InstanceStruct {
 	}
 }
 
-func (i *InstanceStruct) GetInstanceById(id string) (models.SourceMySQLv1InstanceType, error) {
+func (i *InstanceStruct) GetInstanceById(id int64) (SourceMySQLv1InstanceType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -48,10 +62,10 @@ left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  Instan
 where resourseInstance.internalId=?;`
 	rows, err := i.client.Query(q, id)
 	if err != nil {
-		return models.SourceMySQLv1InstanceType{}, err
+		return SourceMySQLv1InstanceType{}, err
 	}
 	defer rows.Close()
-	var result models.SourceMySQLv1InstanceType = models.SourceMySQLv1InstanceType{
+	var result SourceMySQLv1InstanceType = SourceMySQLv1InstanceType{
 		StudyUuid:    "",
 		SerieUuid:    "",
 		InstanceUuid: "",
@@ -63,7 +77,7 @@ where resourseInstance.internalId=?;`
 	for rows.Next() {
 		instance := raw{}
 		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
-			return models.SourceMySQLv1InstanceType{}, err
+			return SourceMySQLv1InstanceType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" || result.InstanceUuid == "" || result.Hash == "" || result.Size == 0 {
 			result.StudyUuid = instance.StudyUuid
@@ -74,11 +88,17 @@ where resourseInstance.internalId=?;`
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
 		result.Tags[tag] = instance.Value
+		if _, ok := intTags[tag]; ok {
+			intValue, err := strconv.Atoi(instance.Value)
+			if err == nil {
+				result.Tags[tag] = int64(intValue)
+			}
+		}
 	}
 	return result, nil
 }
 
-func (i *InstanceStruct) GetInstanceByInstanceUuid(uuid string) (models.SourceMySQLv1InstanceType, error) {
+func (i *InstanceStruct) GetInstanceByInstanceUuid(uuid string) (SourceMySQLv1InstanceType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -97,10 +117,10 @@ left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  Instan
 where resourseInstance.publicId=?;`
 	rows, err := i.client.Query(q, uuid)
 	if err != nil {
-		return models.SourceMySQLv1InstanceType{}, err
+		return SourceMySQLv1InstanceType{}, err
 	}
 	defer rows.Close()
-	var result models.SourceMySQLv1InstanceType = models.SourceMySQLv1InstanceType{
+	var result SourceMySQLv1InstanceType = SourceMySQLv1InstanceType{
 		StudyUuid:    "",
 		SerieUuid:    "",
 		InstanceUuid: "",
@@ -112,7 +132,7 @@ where resourseInstance.publicId=?;`
 	for rows.Next() {
 		instance := raw{}
 		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
-			return models.SourceMySQLv1InstanceType{}, err
+			return SourceMySQLv1InstanceType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" || result.InstanceUuid == "" || result.Hash == "" || result.Size == 0 {
 			result.StudyUuid = instance.StudyUuid
@@ -123,11 +143,17 @@ where resourseInstance.publicId=?;`
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
 		result.Tags[tag] = instance.Value
+		if _, ok := intTags[tag]; ok {
+			intValue, err := strconv.Atoi(instance.Value)
+			if err == nil {
+				result.Tags[tag] = int64(intValue)
+			}
+		}
 	}
 	return result, nil
 }
 
-func (i *InstanceStruct) GetInstanceBySerieUuid(uuid string) ([]models.SourceMySQLv1InstanceType, error) {
+func (i *InstanceStruct) GetInstanceBySerieUuid(uuid string) ([]SourceMySQLv1InstanceType, error) {
 	q := `SELECT 
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
@@ -150,14 +176,23 @@ ORDER BY resourseInstance.publicId;`
 		return nil, err
 	}
 	defer rows.Close()
-	var result []models.SourceMySQLv1InstanceType
+	var result []SourceMySQLv1InstanceType
+	var currentInstance SourceMySQLv1InstanceType = SourceMySQLv1InstanceType{
+		StudyUuid:    "",
+		SerieUuid:    "",
+		InstanceUuid: "",
+		Hash:         "",
+		Size:         0,
+		AE:           "",
+		Tags:         map[string]interface{}{},
+	}
 	for rows.Next() {
 		instance := raw{}
 		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return nil, err
 		}
-		if instance.SerieUuid != "" {
-			result = append(result, models.SourceMySQLv1InstanceType{
+		if currentInstance.InstanceUuid != instance.InstanceUuid {
+			result = append(result, SourceMySQLv1InstanceType{
 				StudyUuid:    instance.StudyUuid,
 				SerieUuid:    instance.SerieUuid,
 				InstanceUuid: instance.InstanceUuid,
@@ -166,9 +201,78 @@ ORDER BY resourseInstance.publicId;`
 				AE:           instance.AE,
 				Tags:         map[string]interface{}{},
 			})
+			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
 		result[len(result)-1].Tags[tag] = instance.Value
+		if _, ok := intTags[tag]; ok {
+			intValue, err := strconv.Atoi(instance.Value)
+			if err == nil {
+				result[len(result)-1].Tags[tag] = int64(intValue)
+			}
+		}
+	}
+	return result, nil
+}
+
+func (i *InstanceStruct) GetInstanceByStudyUuid(uuid string) ([]SourceMySQLv1InstanceType, error) {
+	q := `SELECT 
+resourseStudy.publicId as StudyUuid,
+resourseSerie.publicId as SerieUuid,
+resourseInstance.publicId as InstanceUuid,
+InstanceFile.uuid as FileUuid,
+InstanceFile.uncompressedSize as FileSize,
+InstanceFile.uncompressedHash as FileHash,
+InstanceTags.tagGroup as tagGroup,
+InstanceTags.tagElement as tagElement,
+InstanceTags.value as value
+FROM Resources resourseInstance
+left join(SELECT * FROM Resources where resourceType = 2) resourseSerie on resourseSerie.internalId = resourseInstance.parentId
+left join(SELECT * FROM Resources where resourceType = 1) resourseStudy on resourseStudy.internalId = resourseSerie.parentId
+left join(SELECT * FROM MainDicomTags) InstanceTags on InstanceTags.id = resourseInstance.internalId
+left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  InstanceFile.id = resourseInstance.internalId
+where resourseStudy.publicId=?
+ORDER BY resourseInstance.publicId;`
+	rows, err := i.client.Query(q, uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []SourceMySQLv1InstanceType
+	var currentInstance SourceMySQLv1InstanceType = SourceMySQLv1InstanceType{
+		StudyUuid:    "",
+		SerieUuid:    "",
+		InstanceUuid: "",
+		Hash:         "",
+		Size:         0,
+		AE:           "",
+		Tags:         map[string]interface{}{},
+	}
+	for rows.Next() {
+		instance := raw{}
+		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+			return nil, err
+		}
+		if instance.InstanceUuid != currentInstance.InstanceUuid {
+			currentInstance = SourceMySQLv1InstanceType{
+				StudyUuid:    instance.StudyUuid,
+				SerieUuid:    instance.SerieUuid,
+				InstanceUuid: instance.InstanceUuid,
+				Hash:         instance.Hash,
+				Size:         instance.Size,
+				AE:           instance.AE,
+				Tags:         map[string]interface{}{},
+			}
+			result = append(result, currentInstance)
+		}
+		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
+		result[len(result)-1].Tags[tag] = instance.Value
+		if _, ok := intTags[tag]; ok {
+			intValue, err := strconv.Atoi(instance.Value)
+			if err == nil {
+				result[len(result)-1].Tags[tag] = int64(intValue)
+			}
+		}
 	}
 	return result, nil
 }

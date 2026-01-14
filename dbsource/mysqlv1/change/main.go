@@ -2,9 +2,15 @@ package change
 
 import (
 	"database/sql"
-
-	"github.com/joseluis244/db2dbmod/models"
 )
+
+type SourceMySQLv1ChangesType struct {
+	Seq          int64  `json:"seq"`
+	ChangeType   int    `json:"changeType"`
+	InternalId   int64  `json:"internalId"`
+	ResourceType string `json:"resourceType"`
+	Date         string `json:"date"`
+}
 
 type ChangeStruct struct {
 	client *sql.DB
@@ -25,16 +31,16 @@ func (m *ChangeStruct) LastChange() (int64, error) {
 	return value, nil
 }
 
-func (m *ChangeStruct) ChangesRange(from int64, to int64) ([]models.SourceMySQLv1ChangesType, error) {
+func (m *ChangeStruct) ChangesRange(from int64, to int64) ([]SourceMySQLv1ChangesType, error) {
 	q := `SELECT * FROM Changes where (changeType<10 and changeType!=3) and seq>=? and seq<=?;`
 	rows, err := m.client.Query(q, from, to)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	changes := []models.SourceMySQLv1ChangesType{}
+	changes := []SourceMySQLv1ChangesType{}
 	for rows.Next() {
-		change := models.SourceMySQLv1ChangesType{}
+		change := SourceMySQLv1ChangesType{}
 		if err := rows.Scan(&change.Seq, &change.ChangeType, &change.InternalId, &change.ResourceType, &change.Date); err != nil {
 			return nil, err
 		}

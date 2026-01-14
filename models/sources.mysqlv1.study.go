@@ -1,6 +1,0 @@
-package models
-
-type SourceMySQLv1StudyType struct {
-	StudyUuid string                 `json:"StudyUuid"`
-	Tags      map[string]interface{} `json:"Tags"`
-}
