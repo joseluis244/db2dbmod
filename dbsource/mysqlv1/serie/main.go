@@ -143,3 +143,46 @@ ORDER BY resourseSerie.publicId;`
 	}
 	return result, nil
 }
+
+func (s *SerieStruct) GetSerieByChangeRange(from int64, to int64) ([]SourceMySQLv1SerieType, error) {
+	q := `SELECT 
+StudyResourse.publicId as StudyUuid,
+SeriesResourse.publicId as SerieUuid,
+SeriesTags.tagGroup as tagGroup,
+SeriesTags.tagElement as tagElement,
+SeriesTags.value as value
+FROM Changes SeriesChange
+left join Resources SeriesResourse on SeriesResourse.internalId=SeriesChange.internalId and SeriesResourse.resourceType=2
+left join Resources StudyResourse on StudyResourse.internalId=SeriesResourse.parentId and StudyResourse.resourceType=1
+left join MainDicomTags SeriesTags on SeriesResourse.internalId=SeriesTags.id
+where SeriesChange.changeType=4 and (SeriesChange.seq>=? and SeriesChange.seq<=?)
+order by StudyResourse.publicId;`
+	rows, err := s.client.Query(q, from, to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []SourceMySQLv1SerieType
+	var currentSerie SourceMySQLv1SerieType = SourceMySQLv1SerieType{
+		StudyUuid: "",
+		SerieUuid: "",
+		Tags:      map[string]interface{}{},
+	}
+	for rows.Next() {
+		serie := raw{}
+		if err := rows.Scan(&serie.StudyUuid, &serie.SerieUuid, &serie.TagGroup, &serie.TagElement, &serie.Value); err != nil {
+			return nil, err
+		}
+		if serie.SerieUuid != currentSerie.SerieUuid {
+			currentSerie = SourceMySQLv1SerieType{
+				StudyUuid: serie.StudyUuid,
+				SerieUuid: serie.SerieUuid,
+				Tags:      map[string]interface{}{},
+			}
+			result = append(result, currentSerie)
+		}
+		tag := utils.Dec2Hex(serie.TagGroup, serie.TagElement)
+		result[len(result)-1].Tags[tag] = serie.Value
+	}
+	return result, nil
+}

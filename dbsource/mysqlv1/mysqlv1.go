@@ -3,6 +3,7 @@ package mysqlv1
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joseluis244/db2dbmod/dbsource/mysqlv1/change"
@@ -38,6 +39,9 @@ func (m *MySQLv1) Connect(dsn string) error {
 	if err := client.Ping(); err != nil {
 		return err
 	}
+	client.SetConnMaxLifetime(time.Minute * 3)
+	client.SetMaxOpenConns(10)
+	client.SetMaxIdleConns(10)
 	m.client = client
 	m.Study = study.New(client)
 	m.Change = change.New(client)
