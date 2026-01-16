@@ -2,7 +2,6 @@ package instance
 
 import (
 	"database/sql"
-	"strconv"
 
 	"github.com/joseluis244/db2dbmod/utils"
 )
@@ -31,16 +30,6 @@ type raw struct {
 
 var intTags = map[string]bool{
 	"0020,0013": true,
-}
-
-func intconverter(tag string, value string) any {
-	if _, ok := intTags[tag]; ok {
-		intValue, err := strconv.Atoi(value)
-		if err == nil {
-			return int64(intValue)
-		}
-	}
-	return value
 }
 
 type InstanceStruct struct {
@@ -97,7 +86,7 @@ where resourseInstance.internalId=?;`
 			result.Size = instance.Size
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
-		result.Tags[tag] = intconverter(tag, instance.Value)
+		result.Tags[tag] = utils.TagIntConverter(intTags, tag, instance.Value)
 	}
 	return result, nil
 }
@@ -146,7 +135,7 @@ where resourseInstance.publicId=?;`
 			result.Size = instance.Size
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
-		result.Tags[tag] = intconverter(tag, instance.Value)
+		result.Tags[tag] = utils.TagIntConverter(intTags, tag, instance.Value)
 	}
 	return result, nil
 }
@@ -202,7 +191,7 @@ ORDER BY resourseInstance.publicId;`
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
-		result[len(result)-1].Tags[tag] = intconverter(tag, instance.Value)
+		result[len(result)-1].Tags[tag] = utils.TagIntConverter(intTags, tag, instance.Value)
 	}
 	return result, nil
 }
@@ -258,7 +247,7 @@ ORDER BY resourseInstance.publicId;`
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
-		result[len(result)-1].Tags[tag] = intconverter(tag, instance.Value)
+		result[len(result)-1].Tags[tag] = utils.TagIntConverter(intTags, tag, instance.Value)
 	}
 	return result, nil
 }
@@ -315,7 +304,7 @@ order by StudyResourse.publicId,SeriesResourse.publicId;`
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
-		result[len(result)-1].Tags[tag] = intconverter(tag, instance.Value)
+		result[len(result)-1].Tags[tag] = utils.TagIntConverter(intTags, tag, instance.Value)
 	}
 	return result, nil
 }

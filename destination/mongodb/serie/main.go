@@ -17,12 +17,64 @@ type SerieStruct struct {
 }
 
 func New(client *mongo.Client, db string, collection string) *SerieStruct {
+	coll := client.Database(db).Collection(collection)
+	coll.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
+		{
+			Keys:    bson.M{"StudyUuid": 1},
+			Options: options.Index().SetUnique(false),
+		},
+		{
+			Keys:    bson.M{"SerieUuid": 1},
+			Options: options.Index().SetUnique(true),
+		},
+	})
 	return &SerieStruct{
 		client:     client,
 		db:         db,
-		collection: client.Database(db).Collection(collection),
+		collection: coll,
 		ctx:        context.TODO(),
 	}
+}
+
+func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error {
+	Models := []mongo.WriteModel{}
+	for _, serie := range series {
+		Model := mongo.NewUpdateOneModel().SetFilter(
+			bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}).SetUpdate(
+			bson.M{
+				"$setOnInsert": bson.M{
+					"DealerID":  serie.DealerID,
+					"ClientID":  serie.ClientID,
+					"BranchID":  serie.BranchID,
+					"StudyUuid": serie.StudyUuid,
+					"SerieUuid": serie.SerieUuid,
+					"CreatedAt": serie.CreatedAt,
+				},
+				"$set": bson.M{
+					"Tags":      serie.Tags,
+					"UpdatedAt": serie.UpdatedAt,
+					"Sync": models.SyncType{
+						Status:   "pending",
+						SyncTime: 0,
+					},
+				},
+			}).SetUpsert(true)
+		Models = append(Models, Model)
+		if len(Models) == 500 {
+			_, err := s.collection.BulkWrite(s.ctx, Models)
+			if err != nil {
+				return err
+			}
+			Models = []mongo.WriteModel{}
+		}
+	}
+	if len(Models) > 0 {
+		_, err := s.collection.BulkWrite(s.ctx, Models)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *SerieStruct) UpsertSerie(serie models.DestinationSeriesType) error {
@@ -39,17 +91,15 @@ func (s *SerieStruct) UpsertSerie(serie models.DestinationSeriesType) error {
 			"BranchID":  serie.BranchID,
 			"StudyUuid": serie.StudyUuid,
 			"SerieUuid": serie.SerieUuid,
-			"Tags":      serie.Tags,
 			"CreatedAt": serie.CreatedAt,
-			"BuildTime": 0,
-			"Sync": models.SyncType{
-				Status:   "pending",
-				SyncTime: 0,
-			},
 		},
 		"$set": bson.M{
 			"Tags":      serie.Tags,
 			"UpdatedAt": serie.UpdatedAt,
+			"Sync": models.SyncType{
+				Status:   "pending",
+				SyncTime: 0,
+			},
 		},
 	},
 		opt)

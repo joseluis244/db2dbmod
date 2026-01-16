@@ -2,7 +2,6 @@ package study
 
 import (
 	"database/sql"
-	"strconv"
 
 	"github.com/joseluis244/db2dbmod/utils"
 )
@@ -21,16 +20,6 @@ type raw struct {
 
 var intTags = map[string]bool{
 	"0008,0020": true,
-}
-
-func intconverter(tag string, value string) any {
-	if _, ok := intTags[tag]; ok {
-		intValue, err := strconv.Atoi(value)
-		if err == nil {
-			return int64(intValue)
-		}
-	}
-	return value
 }
 
 type StudyStruct struct {
@@ -70,7 +59,7 @@ where internalId = ?;`
 			result.StudyUuid = study.StudyUuid
 		}
 		tag := utils.Dec2Hex(study.TagGroup, study.TagElement)
-		result.Tags[tag] = intconverter(tag, study.Value)
+		result.Tags[tag] = utils.TagIntConverter(intTags, tag, study.Value)
 	}
 	return result, nil
 }
@@ -102,7 +91,7 @@ where publicId = ?;`
 			result.StudyUuid = study.StudyUuid
 		}
 		tag := utils.Dec2Hex(study.TagGroup, study.TagElement)
-		result.Tags[tag] = intconverter(tag, study.Value)
+		result.Tags[tag] = utils.TagIntConverter(intTags, tag, study.Value)
 	}
 	return result, nil
 }
@@ -141,7 +130,7 @@ order by StudyResourse.publicId;`
 			result = append(result, currentStudy)
 		}
 		tag := utils.Dec2Hex(study.TagGroup, study.TagElement)
-		result[len(result)-1].Tags[tag] = intconverter(tag, study.Value)
+		result[len(result)-1].Tags[tag] = utils.TagIntConverter(intTags, tag, study.Value)
 	}
 	return result, nil
 }

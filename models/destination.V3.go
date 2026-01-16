@@ -1,5 +1,7 @@
 package models
 
+var DestinationV3Collection = "V3"
+
 type DestinationV3InstanceType struct {
 	Uuid  string                 `json:"Uuid"`
 	Ae    string                 `json:"Ae"`
@@ -12,7 +14,6 @@ type DestinationV3InstanceType struct {
 
 type DestinationV3SeriesType struct {
 	SerieUuid string                      `json:"SerieUuid"`
-	StudyUuid string                      `json:"StudyUuid"`
 	Tags      map[string]interface{}      `json:"Tags"`
 	Instances []DestinationV3InstanceType `json:"Instances"`
 }
@@ -26,7 +27,6 @@ type DestinationV3Type struct {
 	Series    []DestinationV3SeriesType `json:"Series"`
 	CreatedAt int64                     `json:"CreatedAt"`
 	UpdatedAt int64                     `json:"UpdatedAt"`
-	Sync      SyncType                  `json:"Sync"`
 }
 
 func NewDestinationV3InstanceType(Uuid string, Ae string, Hash string, Size int64, Path string, Store string, Tags map[string]interface{}) DestinationV3InstanceType {
@@ -41,10 +41,9 @@ func NewDestinationV3InstanceType(Uuid string, Ae string, Hash string, Size int6
 	}
 }
 
-func NewDestinationV3SeriesType(SerieUuid string, StudyUuid string, Tags map[string]interface{}, Instances []DestinationV3InstanceType) DestinationV3SeriesType {
+func NewDestinationV3SeriesType(SerieUuid string, Tags map[string]interface{}, Instances []DestinationV3InstanceType) DestinationV3SeriesType {
 	return DestinationV3SeriesType{
 		SerieUuid: SerieUuid,
-		StudyUuid: StudyUuid,
 		Tags:      Tags,
 		Instances: Instances,
 	}
@@ -60,9 +59,5 @@ func NewDestinationV3Type(DealerID string, ClientID string, BranchID string, Stu
 		Series:    Series,
 		CreatedAt: CreatedAt,
 		UpdatedAt: UpdatedAt,
-		Sync: SyncType{
-			Status:   "pending",
-			SyncTime: 0,
-		},
 	}
 }

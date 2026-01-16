@@ -14,10 +14,10 @@ func V3Builder(study models.DestinationStudyType, series []models.DestinationSer
 	for i, serie := range series {
 		v3instances := make([]models.DestinationV3InstanceType, len(instancesMap[serie.SerieUuid]))
 		for j, instance := range instancesMap[serie.SerieUuid] {
-			v3instance := models.NewDestinationV3InstanceType(instance.Uuid, instance.Ae, instance.Hash, instance.Size, instance.Path, instance.Store, instance.Tags)
+			v3instance := models.NewDestinationV3InstanceType(instance.InstanceUuid, instance.Ae, instance.Hash, instance.Size, instance.Path, instance.Store, instance.Tags)
 			v3instances[j] = v3instance
 		}
-		v3serie := models.NewDestinationV3SeriesType(serie.SerieUuid, serie.StudyUuid, serie.Tags, v3instances)
+		v3serie := models.NewDestinationV3SeriesType(serie.SerieUuid, serie.Tags, v3instances)
 		v3series[i] = v3serie
 	}
 	v3study := models.NewDestinationV3Type(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.Tags, study.CreatedAt, study.UpdatedAt, v3series)
@@ -29,16 +29,21 @@ func sortInstancesBySerieUuid(instances []models.DestinationInstanceType) map[st
 	for _, instance := range instances {
 		instancesMap[instance.SerieUuid] = append(instancesMap[instance.SerieUuid], instance)
 	}
+	sortedMap := make(map[string][]models.DestinationInstanceType)
 	wg := sync.WaitGroup{}
+	var mu sync.Mutex
 	wg.Add(len(instancesMap))
 	for serieUuid, seriesInstances := range instancesMap {
 		go func(uuid string, instances []models.DestinationInstanceType) {
-			instancesMap[uuid] = sortInstancesByInstanceNumber(instances)
+			sorted := sortInstancesByInstanceNumber(instances)
+			mu.Lock()
+			sortedMap[uuid] = sorted
+			mu.Unlock()
 			wg.Done()
 		}(serieUuid, seriesInstances)
 	}
 	wg.Wait()
-	return instancesMap
+	return sortedMap
 }
 
 func sortInstancesByInstanceNumber(instances []models.DestinationInstanceType) []models.DestinationInstanceType {
