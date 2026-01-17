@@ -3,11 +3,33 @@ package serie
 import (
 	"context"
 
+	"github.com/joseluis244/db2dbmod/destination/mongodb/utils"
 	"github.com/joseluis244/db2dbmod/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
+
+func createSerie(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, CreatedAt int64, Tags map[string]interface{}, UpdatedAt int64) bson.M {
+	return bson.M{
+		"$setOnInsert": bson.M{
+			"DealerID":  DealerID,
+			"ClientID":  ClientID,
+			"BranchID":  BranchID,
+			"StudyUuid": StudyUuid,
+			"SerieUuid": SerieUuid,
+			"CreatedAt": CreatedAt,
+		},
+		"$set": bson.M{
+			"Tags":      Tags,
+			"UpdatedAt": UpdatedAt,
+			"Sync": models.SyncType{
+				Status:   "pending",
+				SyncTime: 0,
+			},
+		},
+	}
+}
 
 type SerieStruct struct {
 	client     *mongo.Client
@@ -25,7 +47,7 @@ func New(client *mongo.Client, db string, collection string) *SerieStruct {
 		},
 		{
 			Keys:    bson.M{"SerieUuid": 1},
-			Options: options.Index().SetUnique(true),
+			Options: options.Index().SetUnique(false),
 		},
 	})
 	return &SerieStruct{
@@ -39,40 +61,16 @@ func New(client *mongo.Client, db string, collection string) *SerieStruct {
 func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error {
 	Models := []mongo.WriteModel{}
 	for _, serie := range series {
-		Model := mongo.NewUpdateOneModel().SetFilter(
-			bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}).SetUpdate(
-			bson.M{
-				"$setOnInsert": bson.M{
-					"DealerID":  serie.DealerID,
-					"ClientID":  serie.ClientID,
-					"BranchID":  serie.BranchID,
-					"StudyUuid": serie.StudyUuid,
-					"SerieUuid": serie.SerieUuid,
-					"CreatedAt": serie.CreatedAt,
-				},
-				"$set": bson.M{
-					"Tags":      serie.Tags,
-					"UpdatedAt": serie.UpdatedAt,
-					"Sync": models.SyncType{
-						Status:   "pending",
-						SyncTime: 0,
-					},
-				},
-			}).SetUpsert(true)
+		filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
+		update := createSerie(serie.DealerID, serie.ClientID, serie.BranchID, serie.StudyUuid, serie.SerieUuid, serie.CreatedAt, serie.Tags, serie.UpdatedAt)
+		Model := mongo.NewUpdateOneModel()
+		Model.SetFilter(filter)
+		Model.SetUpdate(update).SetUpsert(true)
 		Models = append(Models, Model)
-		if len(Models) == 500 {
-			_, err := s.collection.BulkWrite(s.ctx, Models)
-			if err != nil {
-				return err
-			}
-			Models = []mongo.WriteModel{}
-		}
 	}
-	if len(Models) > 0 {
-		_, err := s.collection.BulkWrite(s.ctx, Models)
-		if err != nil {
-			return err
-		}
+	_, err := utils.BulkWrite(s.ctx, s.collection, Models)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -80,29 +78,9 @@ func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error 
 func (s *SerieStruct) UpsertSerie(serie models.DestinationSeriesType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
-
-	_, err := s.collection.UpdateOne(s.ctx, bson.M{
-		"StudyUuid": serie.StudyUuid,
-		"SerieUuid": serie.SerieUuid,
-	}, bson.M{
-		"$setOnInsert": bson.M{
-			"DealerID":  serie.DealerID,
-			"ClientID":  serie.ClientID,
-			"BranchID":  serie.BranchID,
-			"StudyUuid": serie.StudyUuid,
-			"SerieUuid": serie.SerieUuid,
-			"CreatedAt": serie.CreatedAt,
-		},
-		"$set": bson.M{
-			"Tags":      serie.Tags,
-			"UpdatedAt": serie.UpdatedAt,
-			"Sync": models.SyncType{
-				Status:   "pending",
-				SyncTime: 0,
-			},
-		},
-	},
-		opt)
+	filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
+	update := createSerie(serie.DealerID, serie.ClientID, serie.BranchID, serie.StudyUuid, serie.SerieUuid, serie.CreatedAt, serie.Tags, serie.UpdatedAt)
+	_, err := s.collection.UpdateOne(s.ctx, filter, update, opt)
 	if err != nil {
 		return err
 	}

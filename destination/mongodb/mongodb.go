@@ -7,6 +7,7 @@ import (
 	"github.com/joseluis244/db2dbmod/destination/mongodb/instance"
 	"github.com/joseluis244/db2dbmod/destination/mongodb/serie"
 	"github.com/joseluis244/db2dbmod/destination/mongodb/study"
+	"github.com/joseluis244/db2dbmod/destination/mongodb/system"
 	v3 "github.com/joseluis244/db2dbmod/destination/mongodb/v3"
 	"github.com/joseluis244/db2dbmod/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -20,6 +21,7 @@ type MongoDB struct {
 	Series   *serie.SerieStruct
 	Instance *instance.InstanceStruct
 	V3       *v3.V3Struct
+	System   *system.SystemStruct
 }
 
 func New() *MongoDB {
@@ -30,6 +32,7 @@ func New() *MongoDB {
 		Series:   nil,
 		Instance: nil,
 		V3:       nil,
+		System:   nil,
 	}
 }
 
@@ -47,6 +50,7 @@ func (m *MongoDB) Connect(dsn string, db string) error {
 	m.Series = serie.New(client, db, models.DestinationSeriesRawCollection)
 	m.Instance = instance.New(client, db, models.DestinationInstanceRawCollection)
 	m.V3 = v3.New(client, db, models.DestinationV3Collection)
+	m.System = system.New(client, db, "system")
 	fmt.Println("Connected to MongoDB")
 	return nil
 }

@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 
+	"github.com/joseluis244/db2dbmod/destination/mongodb/utils"
 	"github.com/joseluis244/db2dbmod/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -55,8 +56,8 @@ func New(client *mongo.Client, db string, collection string) *InstanceStruct {
 			Options: options.Index().SetUnique(false),
 		},
 		{
-			Keys:    bson.M{"Uuid": 1},
-			Options: options.Index().SetUnique(true),
+			Keys:    bson.M{"InstanceUuid": 1},
+			Options: options.Index().SetUnique(false),
 		},
 	})
 	return &InstanceStruct{
@@ -77,19 +78,10 @@ func (i *InstanceStruct) UpsertInstances(instances []models.DestinationInstanceT
 		Model.SetUpdate(update)
 		Model.SetUpsert(true)
 		Models = append(Models, Model)
-		if len(Models) == 500 {
-			_, err := i.collection.BulkWrite(i.ctx, Models)
-			if err != nil {
-				return err
-			}
-			Models = []mongo.WriteModel{}
-		}
 	}
-	if len(Models) > 0 {
-		_, err := i.collection.BulkWrite(i.ctx, Models)
-		if err != nil {
-			return err
-		}
+	_, err := utils.BulkWrite(i.ctx, i.collection, Models)
+	if err != nil {
+		return err
 	}
 	return nil
 }

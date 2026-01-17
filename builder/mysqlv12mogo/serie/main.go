@@ -24,6 +24,9 @@ func (s *SerieStruct) Move2Mongo(serie serie.SourceMySQLv1SerieType) (models.Des
 }
 
 func (s *SerieStruct) MoveMany2Mongo(series []serie.SourceMySQLv1SerieType) ([]models.DestinationSeriesType, error) {
+	if len(series) == 0 {
+		return []models.DestinationSeriesType{}, nil
+	}
 	var seriesMongo []models.DestinationSeriesType
 	for _, serie := range series {
 		serieMongo, err := s.Move2Mongo(serie)

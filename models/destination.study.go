@@ -2,21 +2,16 @@ package models
 
 var DestinationStudyCollection string = "StudyRaw"
 
-type SyncType struct {
-	Status   string `json:"Status"` // "pending", "syncing", "synced"
-	SyncTime int64  `json:"SyncTime"`
-}
-
 type DestinationStudyType struct {
-	DealerID  string                 `json:"DealerID"`
-	ClientID  string                 `json:"ClientID"`
-	BranchID  string                 `json:"BranchID"`
-	StudyUuid string                 `json:"StudyUuid"`
-	Tags      map[string]interface{} `json:"Tags"`
-	CreatedAt int64                  `json:"CreatedAt"`
-	UpdatedAt int64                  `json:"UpdatedAt"`
-	BuildTime int64                  `json:"BuildTime"`
-	Sync      SyncType               `json:"Sync"`
+	DealerID  string                 `json:"DealerID" bson:"DealerID"`
+	ClientID  string                 `json:"ClientID" bson:"ClientID"`
+	BranchID  string                 `json:"BranchID" bson:"BranchID"`
+	StudyUuid string                 `json:"StudyUuid" bson:"StudyUuid"`
+	Tags      map[string]interface{} `json:"Tags" bson:"Tags"`
+	CreatedAt int64                  `json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt int64                  `json:"UpdatedAt" bson:"UpdatedAt"`
+	BuildTime int64                  `json:"BuildTime" bson:"BuildTime"`
+	Sync      SyncType               `json:"Sync" bson:"Sync"`
 }
 
 func NewDestinationStudyType(DealerID string, ClientID string, BranchID string, StudyUuid string, Tags map[string]interface{}) DestinationStudyType {

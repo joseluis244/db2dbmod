@@ -21,7 +21,7 @@ func New(client *mongo.Client, db string, collection string) *StudyStruct {
 	coll.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		{
 			Keys:    bson.M{"StudyUuid": 1},
-			Options: options.Index().SetUnique(true),
+			Options: options.Index().SetUnique(false),
 		},
 		{
 			Keys:    bson.M{"Tags.0008,0020": 1},

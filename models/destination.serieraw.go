@@ -3,15 +3,15 @@ package models
 var DestinationSeriesRawCollection string = "SeriesRaw"
 
 type DestinationSeriesType struct {
-	DealerID  string                 `json:"DealerID"`
-	ClientID  string                 `json:"ClientID"`
-	BranchID  string                 `json:"BranchID"`
-	StudyUuid string                 `json:"StudyUuid"`
-	SerieUuid string                 `json:"SerieUuid"`
-	Tags      map[string]interface{} `json:"Tags"`
-	CreatedAt int64                  `json:"CreatedAt"`
-	UpdatedAt int64                  `json:"UpdatedAt"`
-	Sync      SyncType               `json:"Sync"`
+	DealerID  string                 `json:"DealerID" bson:"DealerID"`
+	ClientID  string                 `json:"ClientID" bson:"ClientID"`
+	BranchID  string                 `json:"BranchID" bson:"BranchID"`
+	StudyUuid string                 `json:"StudyUuid" bson:"StudyUuid"`
+	SerieUuid string                 `json:"SerieUuid" bson:"SerieUuid"`
+	Tags      map[string]interface{} `json:"Tags" bson:"Tags"`
+	CreatedAt int64                  `json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt int64                  `json:"UpdatedAt" bson:"UpdatedAt"`
+	Sync      SyncType               `json:"Sync" bson:"Sync"`
 }
 
 func NewDestinationSeriesRawType(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, Tags map[string]interface{}) DestinationSeriesType {

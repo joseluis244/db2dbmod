@@ -24,6 +24,9 @@ func (s *StudyStruct) Move2Mongo(st study.SourceMySQLv1StudyType) (models.Destin
 }
 
 func (s *StudyStruct) MoveMany2Mongo(studies []study.SourceMySQLv1StudyType) ([]models.DestinationStudyType, error) {
+	if len(studies) == 0 {
+		return []models.DestinationStudyType{}, nil
+	}
 	var studiesMongo []models.DestinationStudyType
 	for _, st := range studies {
 		studyMongo, err := s.Move2Mongo(st)

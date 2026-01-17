@@ -1,6 +1,7 @@
 package study
 
 import (
+	"github.com/joseluis244/db2dbmod/destination/mongodb/utils"
 	"github.com/joseluis244/db2dbmod/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -9,7 +10,7 @@ import (
 
 //
 
-func createStudy(DealerID string, ClientID string, BranchID string, StudyUuid string, CreatedAt int64, Tags map[string]interface{}) bson.M {
+func createStudy(DealerID string, ClientID string, BranchID string, StudyUuid string, CreatedAt int64, UpdatedAt int64, Tags map[string]interface{}) bson.M {
 	return bson.M{
 		"$setOnInsert": bson.M{
 			"DealerID":  DealerID,
@@ -25,7 +26,7 @@ func createStudy(DealerID string, ClientID string, BranchID string, StudyUuid st
 		},
 		"$set": bson.M{
 			"Tags":      Tags,
-			"UpdatedAt": 0,
+			"UpdatedAt": UpdatedAt,
 		},
 	}
 }
@@ -33,26 +34,17 @@ func createStudy(DealerID string, ClientID string, BranchID string, StudyUuid st
 func (s *StudyStruct) UpsertStudies(studies []models.DestinationStudyType) error {
 	Models := []mongo.WriteModel{}
 	for _, study := range studies {
-		update := createStudy(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.CreatedAt, study.Tags)
+		update := createStudy(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.CreatedAt, study.UpdatedAt, study.Tags)
 		filter := bson.M{"StudyUuid": study.StudyUuid}
 		Model := mongo.NewUpdateOneModel()
 		Model.SetFilter(filter)
 		Model.SetUpdate(update)
 		Model.SetUpsert(true)
 		Models = append(Models, Model)
-		if len(Models) == 500 {
-			_, err := s.collection.BulkWrite(s.ctx, Models)
-			if err != nil {
-				return err
-			}
-			Models = []mongo.WriteModel{}
-		}
 	}
-	if len(Models) > 0 {
-		_, err := s.collection.BulkWrite(s.ctx, Models)
-		if err != nil {
-			return err
-		}
+	_, err := utils.BulkWrite(s.ctx, s.collection, Models)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -61,7 +53,7 @@ func (s *StudyStruct) UpsertStudy(study models.DestinationStudyType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
 	filter := bson.M{"StudyUuid": study.StudyUuid}
-	update := createStudy(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.CreatedAt, study.Tags)
+	update := createStudy(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.CreatedAt, study.UpdatedAt, study.Tags)
 	_, err := s.collection.UpdateOne(s.ctx, filter, update, opt)
 	if err != nil {
 		return err

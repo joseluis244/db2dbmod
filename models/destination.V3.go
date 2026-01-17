@@ -3,30 +3,31 @@ package models
 var DestinationV3Collection = "V3"
 
 type DestinationV3InstanceType struct {
-	Uuid  string                 `json:"Uuid"`
-	Ae    string                 `json:"Ae"`
-	Hash  string                 `json:"Hash"`
-	Size  int64                  `json:"Size"`
-	Path  string                 `json:"Path"`
-	Store string                 `json:"Store"`
-	Tags  map[string]interface{} `json:"Tags"`
+	Uuid  string                 `json:"Uuid" bson:"Uuid"`
+	Ae    string                 `json:"Ae" bson:"Ae"`
+	Hash  string                 `json:"Hash" bson:"Hash"`
+	Size  int64                  `json:"Size" bson:"Size"`
+	Path  string                 `json:"Path" bson:"Path"`
+	Store string                 `json:"Store" bson:"Store"`
+	Tags  map[string]interface{} `json:"Tags" bson:"Tags"`
 }
 
 type DestinationV3SeriesType struct {
-	SerieUuid string                      `json:"SerieUuid"`
-	Tags      map[string]interface{}      `json:"Tags"`
-	Instances []DestinationV3InstanceType `json:"Instances"`
+	SerieUuid string                      `json:"SerieUuid" bson:"SerieUuid"`
+	Tags      map[string]interface{}      `json:"Tags" bson:"Tags"`
+	Instances []DestinationV3InstanceType `json:"Instances" bson:"Instances"`
 }
 
 type DestinationV3Type struct {
-	DealerID  string                    `json:"DealerID"`
-	ClientID  string                    `json:"ClientID"`
-	BranchID  string                    `json:"BranchID"`
-	StudyUuid string                    `json:"StudyUuid"`
-	Tags      map[string]interface{}    `json:"Tags"`
-	Series    []DestinationV3SeriesType `json:"Series"`
-	CreatedAt int64                     `json:"CreatedAt"`
-	UpdatedAt int64                     `json:"UpdatedAt"`
+	DealerID  string                    `json:"DealerID" bson:"DealerID"`
+	ClientID  string                    `json:"ClientID" bson:"ClientID"`
+	BranchID  string                    `json:"BranchID" bson:"BranchID"`
+	StudyUuid string                    `json:"StudyUuid" bson:"StudyUuid"`
+	Tags      map[string]interface{}    `json:"Tags" bson:"Tags"`
+	Series    []DestinationV3SeriesType `json:"Series" bson:"Series"`
+	CreatedAt int64                     `json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt int64                     `json:"UpdatedAt" bson:"UpdatedAt"`
+	Sync      SyncType                  `json:"Sync" bson:"Sync"`
 }
 
 func NewDestinationV3InstanceType(Uuid string, Ae string, Hash string, Size int64, Path string, Store string, Tags map[string]interface{}) DestinationV3InstanceType {
@@ -59,5 +60,9 @@ func NewDestinationV3Type(DealerID string, ClientID string, BranchID string, Stu
 		Series:    Series,
 		CreatedAt: CreatedAt,
 		UpdatedAt: UpdatedAt,
+		Sync: SyncType{
+			Status:   "pending",
+			SyncTime: 0,
+		},
 	}
 }
