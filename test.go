@@ -11,8 +11,9 @@ import (
 	"github.com/joseluis244/db2dbmod/destination"
 )
 
+var t = time.Now()
+
 func main() {
-	t := time.Now()
 	mysql := dbsource.MySQLv1.New()
 	err := mysql.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
 	if err != nil {
@@ -33,7 +34,6 @@ func main() {
 	//process
 	go processChanges(Builder, chBuilded)
 	//time consume
-	fmt.Println(time.Since(t))
 	select {}
 }
 
@@ -81,6 +81,7 @@ func processChanges(builder *mysqlv12mogo.BuilderStruct, chBuilded <-chan mysqlv
 		}
 		fmt.Println(len(instanceMongo))
 		fmt.Println(tobuild.LastChange)
+		fmt.Println("Time consume: ", time.Since(t))
 	}
 }
 
