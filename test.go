@@ -5,57 +5,59 @@ import (
 	"time"
 
 	"github.com/joseluis244/db2dbmod/builder"
-	"github.com/joseluis244/db2dbmod/builder/mysqlv12mogo"
-	"github.com/joseluis244/db2dbmod/dbsource"
-	"github.com/joseluis244/db2dbmod/dbsource/mysqlv1"
-	"github.com/joseluis244/db2dbmod/destination"
+	OrtMySQL2Mongo "github.com/joseluis244/db2dbmod/builder/ortmysql2symongov2"
+	"github.com/joseluis244/db2dbmod/databases"
+	"github.com/joseluis244/db2dbmod/databases/ortmysql"
+	"github.com/joseluis244/db2dbmod/databases/symongov2"
+	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var t = time.Now()
 
 func main() {
-	mysql := dbsource.MySQLv1.New()
-	err := mysql.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
+	localsource := databases.OrtMySql.New()
+	err := localsource.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
 	if err != nil {
 		panic(err)
 	}
-	defer mysql.Disconnect()
-	mongo := destination.MongoDB.New()
-	err = mongo.Connect("mongodb://localhost:27018", "test1")
+	defer localsource.Disconnect()
+	localdestination := databases.SyMongoV2.New()
+	err = localdestination.Connect("mongodb://localhost:27018", "test1")
 	if err != nil {
 		panic(err)
 	}
-	defer mongo.Disconnect()
-	Builder := builder.Mysqlv12Mogo.New("MedicareSoftMongo", "test1", "sucursal1")
+	defer localdestination.Disconnect()
+	Builder := builder.OrtMySQL2Mongo.New("MedicareSoftMongo", "test1", "sucursal1")
 	//
-	chBuilded := make(chan mysqlv12mogo.ChanelChangesToBuild, 1000)
+	chBuilded := make(chan OrtMySQL2Mongo.ChanelChangesToBuild, 1000)
 	//
-	go findChanges(mysql, chBuilded)
+	go findChanges(localsource, chBuilded)
 	//process
-	go processChanges(Builder, chBuilded)
+	go processChanges(Builder, chBuilded, localdestination)
 	//time consume
 	select {}
 }
 
-func findChanges(mysql *mysqlv1.MySQLv1, chBuilded chan<- mysqlv12mogo.ChanelChangesToBuild) {
+func findChanges(localsource *ortmysql.OrtMySQL, chBuilded chan<- OrtMySQL2Mongo.ChanelChangesToBuild) {
 
-	lastChange, err := mysql.Change.LastChange()
+	lastChange, err := localsource.Change.LastChange()
 	if err != nil {
 		panic(err)
 	}
-	instances, err := mysql.Instance.GetInstanceByChangeRange(0, lastChange)
+	instances, err := localsource.Instance.GetInstanceByChangeRange(0, lastChange)
 	if err != nil {
 		panic(err)
 	}
-	series, err := mysql.Serie.GetSerieByChangeRange(0, lastChange)
+	series, err := localsource.Serie.GetSerieByChangeRange(0, lastChange)
 	if err != nil {
 		panic(err)
 	}
-	studies, err := mysql.Study.GetStudyByChangeRange(0, lastChange)
+	studies, err := localsource.Study.GetStudyByChangeRange(0, lastChange)
 	if err != nil {
 		panic(err)
 	}
-	chBuilded <- mysqlv12mogo.ChanelChangesToBuild{
+	chBuilded <- OrtMySQL2Mongo.ChanelChangesToBuild{
 		Studies:    studies,
 		Series:     series,
 		Instances:  instances,
@@ -63,7 +65,7 @@ func findChanges(mysql *mysqlv1.MySQLv1, chBuilded chan<- mysqlv12mogo.ChanelCha
 	}
 }
 
-func processChanges(builder *mysqlv12mogo.BuilderStruct, chBuilded <-chan mysqlv12mogo.ChanelChangesToBuild) {
+func processChanges(builder *OrtMySQL2Mongo.BuilderStruct, chBuilded <-chan OrtMySQL2Mongo.ChanelChangesToBuild, localdestination *symongov2.SyMongoV2) {
 	for tobuild := range chBuilded {
 		studyMongo, err := builder.Study.MoveMany2Mongo(tobuild.Studies)
 		if err != nil {
@@ -80,6 +82,16 @@ func processChanges(builder *mysqlv12mogo.BuilderStruct, chBuilded <-chan mysqlv
 			panic(err)
 		}
 		fmt.Println(len(instanceMongo))
+		BUILDED, err := localdestination.Study.GetToBuild(bson.M{})
+		if err != nil {
+			panic(err)
+		}
+		V3s := []models.DestinationV3Type{}
+		for _, study := range BUILDED {
+			V3 := builder.V3.V3Builder(study.Study, study.Series, study.Instances)
+			V3s = append(V3s, V3)
+		}
+		fmt.Println(len(V3s))
 		fmt.Println(tobuild.LastChange)
 		fmt.Println("Time consume: ", time.Since(t))
 	}
