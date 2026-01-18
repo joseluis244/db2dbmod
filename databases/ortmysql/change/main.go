@@ -25,16 +25,16 @@ func (m *ChangeStruct) LastChange() (int64, error) {
 	return value, nil
 }
 
-func (m *ChangeStruct) ChangesRange(from int64, to int64) ([]models.SourceMySQLv1ChangesType, error) {
+func (m *ChangeStruct) ChangesRange(from int64, to int64) ([]models.OrtMySQLv1ChangesType, error) {
 	q := `SELECT * FROM Changes where (changeType<10 and changeType!=3) and seq>=? and seq<=?;`
 	rows, err := m.client.Query(q, from, to)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	changes := []models.SourceMySQLv1ChangesType{}
+	changes := []models.OrtMySQLv1ChangesType{}
 	for rows.Next() {
-		change := models.SourceMySQLv1ChangesType{}
+		change := models.OrtMySQLv1ChangesType{}
 		if err := rows.Scan(&change.Seq, &change.ChangeType, &change.InternalId, &change.ResourceType, &change.Date); err != nil {
 			return nil, err
 		}

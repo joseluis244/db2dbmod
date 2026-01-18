@@ -19,15 +19,15 @@ func New(DealerID string, ClientID string, BranchID string) *StudyStruct {
 	}
 }
 
-func (s *StudyStruct) Move2Mongo(st ortmysqlv1model.OrtMySQLv1StudyType) (models.DestinationStudyType, error) {
-	return models.NewDestinationStudyType(s.DealerID, s.ClientID, s.BranchID, st.StudyUuid, st.Tags), nil
+func (s *StudyStruct) Move2Mongo(st ortmysqlv1model.OrtMySQLv1StudyType) (models.SyMongoV2StudyType, error) {
+	return models.NewSyMongoV2StudyType(s.DealerID, s.ClientID, s.BranchID, st.StudyUuid, st.Tags), nil
 }
 
-func (s *StudyStruct) MoveMany2Mongo(studies []ortmysqlv1model.OrtMySQLv1StudyType) ([]models.DestinationStudyType, error) {
+func (s *StudyStruct) MoveMany2Mongo(studies []ortmysqlv1model.OrtMySQLv1StudyType) ([]models.SyMongoV2StudyType, error) {
 	if len(studies) == 0 {
-		return []models.DestinationStudyType{}, nil
+		return []models.SyMongoV2StudyType{}, nil
 	}
-	var studiesMongo []models.DestinationStudyType
+	var studiesMongo []models.SyMongoV2StudyType
 	for _, st := range studies {
 		studyMongo, err := s.Move2Mongo(st)
 		if err != nil {

@@ -19,15 +19,15 @@ func New(DealerID string, ClientID string, BranchID string) *SerieStruct {
 	}
 }
 
-func (s *SerieStruct) Move2Mongo(serie ortmysqlv1.OrtMySQLv1SerieType) (symongov2model.DestinationSeriesType, error) {
-	return symongov2model.NewDestinationSeriesRawType(s.DealerID, s.ClientID, s.BranchID, serie.StudyUuid, serie.SerieUuid, serie.Tags), nil
+func (s *SerieStruct) Move2Mongo(serie ortmysqlv1.OrtMySQLv1SerieType) (symongov2model.SyMongoV2SeriesType, error) {
+	return symongov2model.NewSyMongoV2SeriesType(s.DealerID, s.ClientID, s.BranchID, serie.StudyUuid, serie.SerieUuid, serie.Tags), nil
 }
 
-func (s *SerieStruct) MoveMany2Mongo(series []ortmysqlv1.OrtMySQLv1SerieType) ([]symongov2model.DestinationSeriesType, error) {
+func (s *SerieStruct) MoveMany2Mongo(series []ortmysqlv1.OrtMySQLv1SerieType) ([]symongov2model.SyMongoV2SeriesType, error) {
 	if len(series) == 0 {
-		return []symongov2model.DestinationSeriesType{}, nil
+		return []symongov2model.SyMongoV2SeriesType{}, nil
 	}
-	var seriesMongo []symongov2model.DestinationSeriesType
+	var seriesMongo []symongov2model.SyMongoV2SeriesType
 	for _, serie := range series {
 		serieMongo, err := s.Move2Mongo(serie)
 		if err != nil {

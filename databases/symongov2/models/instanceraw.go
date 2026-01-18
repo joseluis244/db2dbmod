@@ -1,6 +1,6 @@
 package models
 
-type DestinationInstanceType struct {
+type SyMongoV2InstanceType struct {
 	DealerID     string                 `json:"DealerID" bson:"DealerID"`
 	ClientID     string                 `json:"ClientID" bson:"ClientID"`
 	BranchID     string                 `json:"BranchID" bson:"BranchID"`
@@ -18,8 +18,8 @@ type DestinationInstanceType struct {
 	UpdatedAt    int64                  `json:"UpdatedAt" bson:"UpdatedAt"`
 }
 
-func NewDestinationInstanceRawType(DealerID string, ClientID string, BranchID string, InstanceUuid string, Ae string, Tags map[string]interface{}, StudyUuid string, SerieUuid string, Hash string, Size int64, Path string, Store string) DestinationInstanceType {
-	return DestinationInstanceType{
+func NewSyMongoV2InstanceType(DealerID string, ClientID string, BranchID string, InstanceUuid string, Ae string, Tags map[string]interface{}, StudyUuid string, SerieUuid string, Hash string, Size int64, Path string, Store string) SyMongoV2InstanceType {
+	return SyMongoV2InstanceType{
 		DealerID:     DealerID,
 		ClientID:     ClientID,
 		BranchID:     BranchID,

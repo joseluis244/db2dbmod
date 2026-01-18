@@ -38,7 +38,7 @@ func New(client *mongo.Client, db string, collection string) *V3Struct {
 	}
 }
 
-func (v *V3Struct) UpsertV3s(V3s []models.DestinationV3Type) error {
+func (v *V3Struct) UpsertV3s(V3s []models.SyMongoV2V3Type) error {
 	Models := []mongo.WriteModel{}
 	for _, V3 := range V3s {
 		filter := bson.M{"StudyUuid": V3.StudyUuid}

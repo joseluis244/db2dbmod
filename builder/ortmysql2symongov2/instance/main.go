@@ -19,19 +19,19 @@ func New(DealerID string, ClientID string, BranchID string) *InstanceStruct {
 	}
 }
 
-func (i *InstanceStruct) Move2Mongo(instance ortmysqlv1model.OrtMySQLv1InstanceType) (models.DestinationInstanceType, error) {
+func (i *InstanceStruct) Move2Mongo(instance ortmysqlv1model.OrtMySQLv1InstanceType) (models.SyMongoV2InstanceType, error) {
 	Ae := ""
 	Path := ""
 	Store := "local"
-	var instanceMongo models.DestinationInstanceType = models.NewDestinationInstanceRawType(i.DealerID, i.ClientID, i.BranchID, instance.InstanceUuid, Ae, instance.Tags, instance.StudyUuid, instance.SerieUuid, instance.Hash, instance.Size, Path, Store)
+	var instanceMongo models.SyMongoV2InstanceType = models.NewSyMongoV2InstanceType(i.DealerID, i.ClientID, i.BranchID, instance.InstanceUuid, Ae, instance.Tags, instance.StudyUuid, instance.SerieUuid, instance.Hash, instance.Size, Path, Store)
 	return instanceMongo, nil
 }
 
-func (i *InstanceStruct) MoveMany2Mongo(instances []ortmysqlv1model.OrtMySQLv1InstanceType) ([]models.DestinationInstanceType, error) {
+func (i *InstanceStruct) MoveMany2Mongo(instances []ortmysqlv1model.OrtMySQLv1InstanceType) ([]models.SyMongoV2InstanceType, error) {
 	if len(instances) == 0 {
-		return []models.DestinationInstanceType{}, nil
+		return []models.SyMongoV2InstanceType{}, nil
 	}
-	var instancesMongo []models.DestinationInstanceType
+	var instancesMongo []models.SyMongoV2InstanceType
 	for _, instance := range instances {
 		instanceMongo, err := i.Move2Mongo(instance)
 		if err != nil {

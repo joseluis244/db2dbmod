@@ -31,7 +31,7 @@ func createStudy(DealerID string, ClientID string, BranchID string, StudyUuid st
 	}
 }
 
-func (s *StudyStruct) UpsertStudies(studies []models.DestinationStudyType) error {
+func (s *StudyStruct) UpsertStudies(studies []models.SyMongoV2StudyType) error {
 	Models := []mongo.WriteModel{}
 	for _, study := range studies {
 		update := createStudy(study.DealerID, study.ClientID, study.BranchID, study.StudyUuid, study.CreatedAt, study.UpdatedAt, study.Tags)
@@ -49,7 +49,7 @@ func (s *StudyStruct) UpsertStudies(studies []models.DestinationStudyType) error
 	return nil
 }
 
-func (s *StudyStruct) UpsertStudy(study models.DestinationStudyType) error {
+func (s *StudyStruct) UpsertStudy(study models.SyMongoV2StudyType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
 	filter := bson.M{"StudyUuid": study.StudyUuid}

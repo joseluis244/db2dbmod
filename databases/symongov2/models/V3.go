@@ -1,6 +1,6 @@
 package models
 
-type DestinationV3InstanceType struct {
+type SyMongoV2V3InstanceType struct {
 	Uuid  string                 `json:"Uuid" bson:"Uuid"`
 	Ae    string                 `json:"Ae" bson:"Ae"`
 	Hash  string                 `json:"Hash" bson:"Hash"`
@@ -10,26 +10,26 @@ type DestinationV3InstanceType struct {
 	Tags  map[string]interface{} `json:"Tags" bson:"Tags"`
 }
 
-type DestinationV3SeriesType struct {
-	SerieUuid string                      `json:"SerieUuid" bson:"SerieUuid"`
-	Tags      map[string]interface{}      `json:"Tags" bson:"Tags"`
-	Instances []DestinationV3InstanceType `json:"Instances" bson:"Instances"`
-}
-
-type DestinationV3Type struct {
-	DealerID  string                    `json:"DealerID" bson:"DealerID"`
-	ClientID  string                    `json:"ClientID" bson:"ClientID"`
-	BranchID  string                    `json:"BranchID" bson:"BranchID"`
-	StudyUuid string                    `json:"StudyUuid" bson:"StudyUuid"`
+type SyMongoV2V3SeriesType struct {
+	SerieUuid string                    `json:"SerieUuid" bson:"SerieUuid"`
 	Tags      map[string]interface{}    `json:"Tags" bson:"Tags"`
-	Series    []DestinationV3SeriesType `json:"Series" bson:"Series"`
-	CreatedAt int64                     `json:"CreatedAt" bson:"CreatedAt"`
-	UpdatedAt int64                     `json:"UpdatedAt" bson:"UpdatedAt"`
-	Sync      SyncType                  `json:"Sync" bson:"Sync"`
+	Instances []SyMongoV2V3InstanceType `json:"Instances" bson:"Instances"`
 }
 
-func NewDestinationV3InstanceType(Uuid string, Ae string, Hash string, Size int64, Path string, Store string, Tags map[string]interface{}) DestinationV3InstanceType {
-	return DestinationV3InstanceType{
+type SyMongoV2V3Type struct {
+	DealerID  string                  `json:"DealerID" bson:"DealerID"`
+	ClientID  string                  `json:"ClientID" bson:"ClientID"`
+	BranchID  string                  `json:"BranchID" bson:"BranchID"`
+	StudyUuid string                  `json:"StudyUuid" bson:"StudyUuid"`
+	Tags      map[string]interface{}  `json:"Tags" bson:"Tags"`
+	Series    []SyMongoV2V3SeriesType `json:"Series" bson:"Series"`
+	CreatedAt int64                   `json:"CreatedAt" bson:"CreatedAt"`
+	UpdatedAt int64                   `json:"UpdatedAt" bson:"UpdatedAt"`
+	Sync      SyncType                `json:"Sync" bson:"Sync"`
+}
+
+func NewSyMongoV2V3InstanceType(Uuid string, Ae string, Hash string, Size int64, Path string, Store string, Tags map[string]interface{}) SyMongoV2V3InstanceType {
+	return SyMongoV2V3InstanceType{
 		Uuid:  Uuid,
 		Ae:    Ae,
 		Hash:  Hash,
@@ -40,16 +40,16 @@ func NewDestinationV3InstanceType(Uuid string, Ae string, Hash string, Size int6
 	}
 }
 
-func NewDestinationV3SeriesType(SerieUuid string, Tags map[string]interface{}, Instances []DestinationV3InstanceType) DestinationV3SeriesType {
-	return DestinationV3SeriesType{
+func NewSyMongoV2V3SeriesType(SerieUuid string, Tags map[string]interface{}, Instances []SyMongoV2V3InstanceType) SyMongoV2V3SeriesType {
+	return SyMongoV2V3SeriesType{
 		SerieUuid: SerieUuid,
 		Tags:      Tags,
 		Instances: Instances,
 	}
 }
 
-func NewDestinationV3Type(DealerID string, ClientID string, BranchID string, StudyUuid string, Tags map[string]interface{}, CreatedAt int64, UpdatedAt int64, Series []DestinationV3SeriesType) DestinationV3Type {
-	return DestinationV3Type{
+func NewSyMongoV2V3Type(DealerID string, ClientID string, BranchID string, StudyUuid string, Tags map[string]interface{}, CreatedAt int64, UpdatedAt int64, Series []SyMongoV2V3SeriesType) SyMongoV2V3Type {
+	return SyMongoV2V3Type{
 		DealerID:  DealerID,
 		ClientID:  ClientID,
 		BranchID:  BranchID,

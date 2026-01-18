@@ -58,7 +58,7 @@ func New(client *mongo.Client, db string, collection string) *SerieStruct {
 	}
 }
 
-func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error {
+func (s *SerieStruct) UpsertSeries(series []models.SyMongoV2SeriesType) error {
 	Models := []mongo.WriteModel{}
 	for _, serie := range series {
 		filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
@@ -75,7 +75,7 @@ func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error 
 	return nil
 }
 
-func (s *SerieStruct) UpsertSerie(serie models.DestinationSeriesType) error {
+func (s *SerieStruct) UpsertSerie(serie models.SyMongoV2SeriesType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
 	filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
@@ -118,13 +118,13 @@ func (s *SerieStruct) SetSync(serieUuid string, status string, syncTime int64) e
 	return nil
 }
 
-func (s *SerieStruct) FindByStudyUuid(studyUuid string) (models.DestinationSeriesType, error) {
-	var series models.DestinationSeriesType
+func (s *SerieStruct) FindByStudyUuid(studyUuid string) (models.SyMongoV2SeriesType, error) {
+	var series models.SyMongoV2SeriesType
 	err := s.collection.FindOne(s.ctx, bson.M{
 		"StudyUuid": studyUuid,
 	}).Decode(&series)
 	if err != nil {
-		return models.DestinationSeriesType{}, err
+		return models.SyMongoV2SeriesType{}, err
 	}
 	return series, nil
 }

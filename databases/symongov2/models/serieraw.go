@@ -1,6 +1,6 @@
 package models
 
-type DestinationSeriesType struct {
+type SyMongoV2SeriesType struct {
 	DealerID  string                 `json:"DealerID" bson:"DealerID"`
 	ClientID  string                 `json:"ClientID" bson:"ClientID"`
 	BranchID  string                 `json:"BranchID" bson:"BranchID"`
@@ -12,8 +12,8 @@ type DestinationSeriesType struct {
 	Sync      SyncType               `json:"Sync" bson:"Sync"`
 }
 
-func NewDestinationSeriesRawType(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, Tags map[string]interface{}) DestinationSeriesType {
-	return DestinationSeriesType{
+func NewSyMongoV2SeriesType(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, Tags map[string]interface{}) SyMongoV2SeriesType {
+	return SyMongoV2SeriesType{
 		DealerID:  DealerID,
 		ClientID:  ClientID,
 		BranchID:  BranchID,

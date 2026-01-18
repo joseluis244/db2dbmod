@@ -36,21 +36,21 @@ func New(client *mongo.Client, db string, collection string) *StudyStruct {
 	}
 }
 
-func (s *StudyStruct) FindByStudyUuid(studyUuid string) (models.DestinationStudyType, error) {
-	var study models.DestinationStudyType
+func (s *StudyStruct) FindByStudyUuid(studyUuid string) (models.SyMongoV2StudyType, error) {
+	var study models.SyMongoV2StudyType
 	err := s.collection.FindOne(s.ctx, bson.M{
 		"StudyUuid": studyUuid,
 	}).Decode(&study)
 	if err != nil {
-		return models.DestinationStudyType{}, err
+		return models.SyMongoV2StudyType{}, err
 	}
 	return study, nil
 }
 
 func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
-	Study     models.DestinationStudyType
-	Series    []models.DestinationSeriesType
-	Instances []models.DestinationInstanceType
+	Study     models.SyMongoV2StudyType
+	Series    []models.SyMongoV2SeriesType
+	Instances []models.SyMongoV2InstanceType
 }, error) {
 	Aggr := bson.A{
 		bson.M{"$match": filter},
@@ -82,9 +82,9 @@ func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
 	defer cursor.Close(s.ctx) // IMPORTANTE: cerrar el cursor
 
 	var responses []struct {
-		models.DestinationStudyType `bson:",inline"`
-		Series                      []models.DestinationSeriesType   `bson:"Series"`
-		Instances                   []models.DestinationInstanceType `bson:"Instances"`
+		models.SyMongoV2StudyType `bson:",inline"`
+		Series                    []models.SyMongoV2SeriesType   `bson:"Series"`
+		Instances                 []models.SyMongoV2InstanceType `bson:"Instances"`
 	}
 
 	// Verificar error del cursor.All
@@ -94,18 +94,18 @@ func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
 
 	// Simplificar: retornar directamente sin conversión innecesaria
 	var res []struct {
-		Study     models.DestinationStudyType
-		Series    []models.DestinationSeriesType
-		Instances []models.DestinationInstanceType
+		Study     models.SyMongoV2StudyType
+		Series    []models.SyMongoV2SeriesType
+		Instances []models.SyMongoV2InstanceType
 	}
 
 	for _, response := range responses {
 		res = append(res, struct {
-			Study     models.DestinationStudyType
-			Series    []models.DestinationSeriesType
-			Instances []models.DestinationInstanceType
+			Study     models.SyMongoV2StudyType
+			Series    []models.SyMongoV2SeriesType
+			Instances []models.SyMongoV2InstanceType
 		}{
-			Study:     response.DestinationStudyType,
+			Study:     response.SyMongoV2StudyType,
 			Series:    response.Series,
 			Instances: response.Instances,
 		})
@@ -114,6 +114,6 @@ func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
 	return res, nil
 }
 
-func (s *StudyStruct) GetToSync() ([]models.DestinationStudyType, error) {
+func (s *StudyStruct) GetToSync() ([]models.SyMongoV2StudyType, error) {
 	return nil, nil
 }

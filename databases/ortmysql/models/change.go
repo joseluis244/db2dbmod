@@ -1,6 +1,6 @@
 package models
 
-type SourceMySQLv1ChangesType struct {
+type OrtMySQLv1ChangesType struct {
 	Seq          int64  `json:"seq"`
 	ChangeType   int    `json:"changeType"`
 	InternalId   int64  `json:"internalId"`

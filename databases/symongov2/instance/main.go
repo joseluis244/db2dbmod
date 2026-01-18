@@ -68,7 +68,7 @@ func New(client *mongo.Client, db string, collection string) *InstanceStruct {
 	}
 }
 
-func (i *InstanceStruct) UpsertInstances(instances []models.DestinationInstanceType) error {
+func (i *InstanceStruct) UpsertInstances(instances []models.SyMongoV2InstanceType) error {
 	Models := []mongo.WriteModel{}
 	for _, instance := range instances {
 		filter := bson.M{"InstanceUuid": instance.InstanceUuid}
@@ -86,7 +86,7 @@ func (i *InstanceStruct) UpsertInstances(instances []models.DestinationInstanceT
 	return nil
 }
 
-func (i *InstanceStruct) UpsertInstance(instance models.DestinationInstanceType) error {
+func (i *InstanceStruct) UpsertInstance(instance models.SyMongoV2InstanceType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
 	filter := bson.M{"InstanceUuid": instance.InstanceUuid}
