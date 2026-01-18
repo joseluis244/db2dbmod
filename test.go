@@ -1,16 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/joseluis244/db2dbmod/builder"
 	OrtMySQL2Mongo "github.com/joseluis244/db2dbmod/builder/ortmysql2symongov2"
 	"github.com/joseluis244/db2dbmod/databases"
-	"github.com/joseluis244/db2dbmod/databases/ortmysql"
-	"github.com/joseluis244/db2dbmod/databases/symongov2"
-	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var t = time.Now()
@@ -32,84 +27,67 @@ func main() {
 	//
 	chBuilded := make(chan OrtMySQL2Mongo.ChanelChangesToBuild, 1000)
 	//
-	go findChanges(localsource, chBuilded)
+	//go findChanges(localsource, chBuilded)
 	//process
-	go processChanges(Builder, chBuilded, localdestination)
+	//go processChanges(Builder, chBuilded, localdestination)
 	//time consume
 	select {}
 }
 
-func findChanges(localsource *ortmysql.OrtMySQL, chBuilded chan<- OrtMySQL2Mongo.ChanelChangesToBuild) {
+// func findChanges(localsource *ortmysql.OrtMySQL, chBuilded chan<- OrtMySQL2Mongo.ChanelChangesToBuild) {
 
-	lastChange, err := localsource.Change.LastChange()
-	if err != nil {
-		panic(err)
-	}
-	instances, err := localsource.Instance.GetInstanceByChangeRange(0, lastChange)
-	if err != nil {
-		panic(err)
-	}
-	series, err := localsource.Serie.GetSerieByChangeRange(0, lastChange)
-	if err != nil {
-		panic(err)
-	}
-	studies, err := localsource.Study.GetStudyByChangeRange(0, lastChange)
-	if err != nil {
-		panic(err)
-	}
-	chBuilded <- OrtMySQL2Mongo.ChanelChangesToBuild{
-		Studies:    studies,
-		Series:     series,
-		Instances:  instances,
-		LastChange: lastChange,
-	}
-}
-
-func processChanges(builder *OrtMySQL2Mongo.BuilderStruct, chBuilded <-chan OrtMySQL2Mongo.ChanelChangesToBuild, localdestination *symongov2.SyMongoV2) {
-	for tobuild := range chBuilded {
-		studyMongo, err := builder.Study.MoveMany2Mongo(tobuild.Studies)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(len(studyMongo))
-		seriesMongo, err := builder.Series.MoveMany2Mongo(tobuild.Series)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(len(seriesMongo))
-		instanceMongo, err := builder.Instance.MoveMany2Mongo(tobuild.Instances)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(len(instanceMongo))
-		BUILDED, err := localdestination.Study.GetToBuild(bson.M{})
-		if err != nil {
-			panic(err)
-		}
-		V3s := []models.DestinationV3Type{}
-		for _, study := range BUILDED {
-			V3 := builder.V3.V3Builder(study.Study, study.Series, study.Instances)
-			V3s = append(V3s, V3)
-		}
-		fmt.Println(len(V3s))
-		fmt.Println(tobuild.LastChange)
-		fmt.Println("Time consume: ", time.Since(t))
-	}
-}
-
-// func v3builder(mongo *mongodb.MongoDB) {
-// 	tobuild, err := mongo.Study.GetToBuild(bson.M{})
+// 	lastChange, err := localsource.Change.LastChange()
 // 	if err != nil {
 // 		panic(err)
 // 	}
-// 	V3s := []models.DestinationV3Type{}
-// 	for _, study := range tobuild {
-// 		V3 := builder.V3Builder(study.Study, study.Series, study.Instances)
-// 		V3s = append(V3s, V3)
-// 	}
-// 	err = mongo.V3.UpsertV3s(V3s)
+// 	instances, err := localsource.Instance.GetInstanceByChangeRange(0, lastChange)
 // 	if err != nil {
 // 		panic(err)
 // 	}
-// 	fmt.Println(len(V3s))
+// 	series, err := localsource.Serie.GetSerieByChangeRange(0, lastChange)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	studies, err := localsource.Study.GetStudyByChangeRange(0, lastChange)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	chBuilded <- OrtMySQL2Mongo.ChanelChangesToBuild{
+// 		Studies:    studies,
+// 		Series:     series,
+// 		Instances:  instances,
+// 		LastChange: lastChange,
+// 	}
+// }
+
+// func processChanges(builder *OrtMySQL2Mongo.BuilderStruct, chBuilded <-chan OrtMySQL2Mongo.ChanelChangesToBuild, localdestination *symongov2.SyMongoV2) {
+// 	for tobuild := range chBuilded {
+// 		studyMongo, err := builder.Study.MoveMany2Mongo(tobuild.Studies)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		fmt.Println(len(studyMongo))
+// 		seriesMongo, err := builder.Series.MoveMany2Mongo(tobuild.Series)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		fmt.Println(len(seriesMongo))
+// 		instanceMongo, err := builder.Instance.MoveMany2Mongo(tobuild.Instances)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		fmt.Println(len(instanceMongo))
+// 		BUILDED, err := localdestination.Study.GetToBuild(bson.M{})
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		V3s := []models.DestinationV3Type{}
+// 		for _, study := range BUILDED {
+// 			V3 := builder.V3.V3Builder(study.Study, study.Series, study.Instances)
+// 			V3s = append(V3s, V3)
+// 		}
+// 		fmt.Println(len(V3s))
+// 		fmt.Println(tobuild.LastChange)
+// 		fmt.Println("Time consume: ", time.Since(t))
+// 	}
 // }

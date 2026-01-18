@@ -1,6 +1,6 @@
 package models
 
-type DestinationInstanceType struct {
+type SyMongoV1InstanceType struct {
 	Uuid      string                 `json:"Uuid" bson:"Uuid"`
 	Ae        string                 `json:"Ae" bson:"Ae"`
 	CloudSync int64                  `json:"CloudSync" bson:"CloudSync"`
@@ -14,8 +14,8 @@ type DestinationInstanceType struct {
 	Tags      map[string]interface{} `json:"Tags" bson:"Tags"`
 }
 
-func NewDestinationInstanceRawType(Uuid string, Ae string, CloudSync int64, Hash string, Id int64, Path string, SerieUuid string, Size int64, StudyUuid string, Update int64, Tags map[string]interface{}) DestinationInstanceType {
-	return DestinationInstanceType{
+func NewSyMongoV1InstanceType(Uuid string, Ae string, CloudSync int64, Hash string, Id int64, Path string, SerieUuid string, Size int64, StudyUuid string, Update int64, Tags map[string]interface{}) SyMongoV1InstanceType {
+	return SyMongoV1InstanceType{
 		Uuid:      Uuid,
 		Ae:        Ae,
 		CloudSync: CloudSync,
