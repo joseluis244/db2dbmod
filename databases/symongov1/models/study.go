@@ -13,3 +13,9 @@ func NewSyMongoV1StudyType(StudyUuid string, Id int64, Tags map[string]interface
 		Tags:      Tags,
 	}
 }
+
+type SyMongoV1ToBuildStruct struct {
+	Study     SyMongoV1StudyType
+	Series    []SyMongoV1SeriesType
+	Instances []SyMongoV1InstanceType
+}

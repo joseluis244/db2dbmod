@@ -3,30 +3,22 @@ package serie
 import (
 	"context"
 
-	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
+	"github.com/joseluis244/db2dbmod/databases/symongov1/models"
 	"github.com/joseluis244/db2dbmod/databases/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func createSerie(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, CreatedAt int64, Tags map[string]interface{}, UpdatedAt int64) bson.M {
+func createSerie(SerieUuid string, Id int64, StudyUuid string, Tags map[string]interface{}) bson.M {
 	return bson.M{
 		"$setOnInsert": bson.M{
-			"DealerID":  DealerID,
-			"ClientID":  ClientID,
-			"BranchID":  BranchID,
-			"StudyUuid": StudyUuid,
 			"SerieUuid": SerieUuid,
-			"CreatedAt": CreatedAt,
+			"Id":        Id,
+			"StudyUuid": StudyUuid,
 		},
 		"$set": bson.M{
-			"Tags":      Tags,
-			"UpdatedAt": UpdatedAt,
-			"Sync": models.SyncType{
-				Status:   "pending",
-				SyncTime: 0,
-			},
+			"tags": Tags,
 		},
 	}
 }
@@ -58,11 +50,11 @@ func New(client *mongo.Client, db string, collection string) *SerieStruct {
 	}
 }
 
-func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error {
+func (s *SerieStruct) UpsertSeries(series []models.SyMongoV1SeriesType) error {
 	Models := []mongo.WriteModel{}
 	for _, serie := range series {
 		filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
-		update := createSerie(serie.DealerID, serie.ClientID, serie.BranchID, serie.StudyUuid, serie.SerieUuid, serie.CreatedAt, serie.Tags, serie.UpdatedAt)
+		update := createSerie(serie.SerieUuid, serie.Id, serie.StudyUuid, serie.Tags)
 		Model := mongo.NewUpdateOneModel()
 		Model.SetFilter(filter)
 		Model.SetUpdate(update).SetUpsert(true)
@@ -75,11 +67,11 @@ func (s *SerieStruct) UpsertSeries(series []models.DestinationSeriesType) error 
 	return nil
 }
 
-func (s *SerieStruct) UpsertSerie(serie models.DestinationSeriesType) error {
+func (s *SerieStruct) UpsertSerie(serie models.SyMongoV1SeriesType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
 	filter := bson.M{"StudyUuid": serie.StudyUuid, "SerieUuid": serie.SerieUuid}
-	update := createSerie(serie.DealerID, serie.ClientID, serie.BranchID, serie.StudyUuid, serie.SerieUuid, serie.CreatedAt, serie.Tags, serie.UpdatedAt)
+	update := createSerie(serie.SerieUuid, serie.Id, serie.StudyUuid, serie.Tags)
 	_, err := s.collection.UpdateOne(s.ctx, filter, update, opt)
 	if err != nil {
 		return err
@@ -101,30 +93,13 @@ func (s *SerieStruct) SetUpdatedAt(serieUuid string, updatedAt int64) error {
 	return nil
 }
 
-func (s *SerieStruct) SetSync(serieUuid string, status string, syncTime int64) error {
-	_, err := s.collection.UpdateOne(s.ctx, bson.M{
-		"SerieUuid": serieUuid,
-	}, bson.M{
-		"$set": bson.M{
-			"Sync": models.SyncType{
-				Status:   status,
-				SyncTime: syncTime,
-			},
-		},
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *SerieStruct) FindByStudyUuid(studyUuid string) (models.DestinationSeriesType, error) {
-	var series models.DestinationSeriesType
+func (s *SerieStruct) FindByStudyUuid(studyUuid string) (models.SyMongoV1SeriesType, error) {
+	var series models.SyMongoV1SeriesType
 	err := s.collection.FindOne(s.ctx, bson.M{
 		"StudyUuid": studyUuid,
 	}).Decode(&series)
 	if err != nil {
-		return models.DestinationSeriesType{}, err
+		return models.SyMongoV1SeriesType{}, err
 	}
 	return series, nil
 }

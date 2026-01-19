@@ -1,10 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/joseluis244/db2dbmod/builder"
-	OrtMySQL2Mongo "github.com/joseluis244/db2dbmod/builder/ortmysql2symongov2"
 	"github.com/joseluis244/db2dbmod/databases"
 )
 
@@ -12,26 +11,32 @@ var t = time.Now()
 
 func main() {
 	localsource := databases.OrtMySql.New()
-	err := localsource.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
+	err := localsource.Connect("medicaltecmysql:Medicaltec310188$@tcp(127.0.0.1:3306)/medicaltec")
 	if err != nil {
 		panic(err)
 	}
 	defer localsource.Disconnect()
-	localdestination := databases.SyMongoV2.New()
-	err = localdestination.Connect("mongodb://localhost:27018", "test1")
+	lastChange, err := localsource.Change.LastChange()
 	if err != nil {
 		panic(err)
 	}
-	defer localdestination.Disconnect()
-	Builder := builder.OrtMySQL2Mongo.New("MedicareSoftMongo", "test1", "sucursal1")
-	//
-	chBuilded := make(chan OrtMySQL2Mongo.ChanelChangesToBuild, 1000)
-	//
-	//go findChanges(localsource, chBuilded)
-	//process
-	//go processChanges(Builder, chBuilded, localdestination)
-	//time consume
-	select {}
+	fmt.Println("Last change: ", lastChange)
+	studies, err := localsource.Study.GetStudyByChangeRange(0, lastChange)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Studies: ", studies[0])
+	series, err := localsource.Serie.GetSerieByChangeRange(0, lastChange)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Series: ", series[0])
+	instances, err := localsource.Instance.GetInstanceByChangeRange(0, lastChange)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Instances: ", instances[0])
+	fmt.Println("Time consume: ", time.Since(t))
 }
 
 // func findChanges(localsource *ortmysql.OrtMySQL, chBuilded chan<- OrtMySQL2Mongo.ChanelChangesToBuild) {

@@ -3,7 +3,7 @@ package v3
 import (
 	"context"
 
-	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
+	"github.com/joseluis244/db2dbmod/databases/symongov1/models"
 	"github.com/joseluis244/db2dbmod/databases/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -38,7 +38,7 @@ func New(client *mongo.Client, db string, collection string) *V3Struct {
 	}
 }
 
-func (v *V3Struct) UpsertV3s(V3s []models.DestinationV3Type) error {
+func (v *V3Struct) UpsertV3s(V3s []models.SyMongoV1V3Type) error {
 	Models := []mongo.WriteModel{}
 	for _, V3 := range V3s {
 		filter := bson.M{"StudyUuid": V3.StudyUuid}

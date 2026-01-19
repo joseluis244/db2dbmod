@@ -19,6 +19,7 @@ func New(client *sql.DB) *SerieStruct {
 
 func (s *SerieStruct) GetSerieById(id int64) (models.OrtMySQLv1SerieType, error) {
 	q := `SELECT 
+resourseSerie.internalId as Id,
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
 SerieTags.tagGroup as tagGroup,
@@ -52,6 +53,7 @@ where resourseSerie.internalId=?;`
 
 func (s *SerieStruct) GetSerieBySerieUuid(uuid string) (models.OrtMySQLv1SerieType, error) {
 	q := `SELECT 
+resourseSerie.internalId as Id,
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
 SerieTags.tagGroup as tagGroup,
@@ -85,6 +87,7 @@ where resourseSerie.publicId=?;`
 
 func (s *SerieStruct) GetSerieByStudyUuid(uuid string) ([]models.OrtMySQLv1SerieType, error) {
 	q := `SELECT 
+resourseSerie.internalId as Id,
 resourseStudy.publicId as StudyUuid,
 resourseSerie.publicId as SerieUuid,
 SerieTags.tagGroup as tagGroup,
@@ -119,6 +122,7 @@ ORDER BY resourseSerie.publicId;`
 
 func (s *SerieStruct) GetSerieByChangeRange(from int64, to int64) ([]models.OrtMySQLv1SerieType, error) {
 	q := `SELECT 
+SeriesResourse.internalId as Id,
 StudyResourse.publicId as StudyUuid,
 SeriesResourse.publicId as SerieUuid,
 SeriesTags.tagGroup as tagGroup,

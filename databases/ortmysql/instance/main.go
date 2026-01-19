@@ -34,28 +34,20 @@ InstanceTags.tagGroup as tagGroup,
 InstanceTags.tagElement as tagElement,
 InstanceTags.value as value
 FROM Resources resourseInstance
-left join(SELECT * FROM Resources where resourceType = 2) resourseSerie on resourseSerie.internalId = resourseInstance.parentId
-left join(SELECT * FROM Resources where resourceType = 1) resourseStudy on resourseStudy.internalId = resourseSerie.parentId
-left join(SELECT * FROM MainDicomTags) InstanceTags on InstanceTags.id = resourseInstance.internalId
-left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  InstanceFile.id = resourseInstance.internalId
+left join Resources resourseSerie on resourseSerie.internalId = resourseInstance.parentId AND resourseSerie.resourceType = 2
+left join Resources resourseStudy on resourseStudy.internalId = resourseSerie.parentId AND resourseStudy.resourceType = 1
+left join MainDicomTags InstanceTags on InstanceTags.id = resourseInstance.internalId
+left join AttachedFiles InstanceFile on InstanceFile.id = resourseInstance.internalId AND InstanceFile.fileType = 1
 where resourseInstance.internalId=?;`
 	rows, err := i.client.Query(q, id)
 	if err != nil {
 		return models.OrtMySQLv1InstanceType{}, err
 	}
 	defer rows.Close()
-	var result models.OrtMySQLv1InstanceType = models.OrtMySQLv1InstanceType{
-		StudyUuid:    "",
-		SerieUuid:    "",
-		InstanceUuid: "",
-		Hash:         "",
-		Size:         0,
-		AE:           "",
-		Tags:         map[string]interface{}{},
-	}
+	var result models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
-		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return models.OrtMySQLv1InstanceType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" || result.InstanceUuid == "" || result.Hash == "" || result.Size == 0 {
@@ -84,28 +76,20 @@ InstanceTags.tagGroup as tagGroup,
 InstanceTags.tagElement as tagElement,
 InstanceTags.value as value
 FROM Resources resourseInstance
-left join(SELECT * FROM Resources where resourceType = 2) resourseSerie on resourseSerie.internalId = resourseInstance.parentId
-left join(SELECT * FROM Resources where resourceType = 1) resourseStudy on resourseStudy.internalId = resourseSerie.parentId
-left join(SELECT * FROM MainDicomTags) InstanceTags on InstanceTags.id = resourseInstance.internalId
-left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  InstanceFile.id = resourseInstance.internalId
+left join Resources resourseSerie on resourseSerie.internalId = resourseInstance.parentId AND resourseSerie.resourceType = 2
+left join Resources resourseStudy on resourseStudy.internalId = resourseSerie.parentId AND resourseStudy.resourceType = 1
+left join MainDicomTags InstanceTags on InstanceTags.id = resourseInstance.internalId
+left join AttachedFiles InstanceFile on InstanceFile.id = resourseInstance.internalId AND InstanceFile.fileType = 1
 where resourseInstance.publicId=?;`
 	rows, err := i.client.Query(q, uuid)
 	if err != nil {
 		return models.OrtMySQLv1InstanceType{}, err
 	}
 	defer rows.Close()
-	var result models.OrtMySQLv1InstanceType = models.OrtMySQLv1InstanceType{
-		StudyUuid:    "",
-		SerieUuid:    "",
-		InstanceUuid: "",
-		Hash:         "",
-		Size:         0,
-		AE:           "",
-		Tags:         map[string]interface{}{},
-	}
+	var result models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
-		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return models.OrtMySQLv1InstanceType{}, err
 		}
 		if result.StudyUuid == "" || result.SerieUuid == "" || result.InstanceUuid == "" || result.Hash == "" || result.Size == 0 {
@@ -134,10 +118,10 @@ InstanceTags.tagGroup as tagGroup,
 InstanceTags.tagElement as tagElement,
 InstanceTags.value as value
 FROM Resources resourseInstance
-left join(SELECT * FROM Resources where resourceType = 2) resourseSerie on resourseSerie.internalId = resourseInstance.parentId
-left join(SELECT * FROM Resources where resourceType = 1) resourseStudy on resourseStudy.internalId = resourseSerie.parentId
-left join(SELECT * FROM MainDicomTags) InstanceTags on InstanceTags.id = resourseInstance.internalId
-left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  InstanceFile.id = resourseInstance.internalId
+left join Resources resourseSerie on resourseSerie.internalId = resourseInstance.parentId AND resourseSerie.resourceType = 2
+left join Resources resourseStudy on resourseStudy.internalId = resourseSerie.parentId AND resourseStudy.resourceType = 1
+left join MainDicomTags InstanceTags on InstanceTags.id = resourseInstance.internalId
+left join AttachedFiles InstanceFile on InstanceFile.id = resourseInstance.internalId AND InstanceFile.fileType = 1
 where resourseSerie.publicId=?
 ORDER BY resourseInstance.publicId;`
 	rows, err := i.client.Query(q, uuid)
@@ -146,30 +130,14 @@ ORDER BY resourseInstance.publicId;`
 	}
 	defer rows.Close()
 	var result []models.OrtMySQLv1InstanceType
-	var currentInstance models.OrtMySQLv1InstanceType = models.OrtMySQLv1InstanceType{
-		StudyUuid:    "",
-		SerieUuid:    "",
-		InstanceUuid: "",
-		Hash:         "",
-		Size:         0,
-		AE:           "",
-		Tags:         map[string]interface{}{},
-	}
+	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
-		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return nil, err
 		}
 		if currentInstance.InstanceUuid != instance.InstanceUuid {
-			result = append(result, models.OrtMySQLv1InstanceType{
-				StudyUuid:    instance.StudyUuid,
-				SerieUuid:    instance.SerieUuid,
-				InstanceUuid: instance.InstanceUuid,
-				Hash:         instance.Hash,
-				Size:         instance.Size,
-				AE:           instance.AE,
-				Tags:         map[string]interface{}{},
-			})
+			currentInstance = models.NewOrtMySQLv1InstanceType(instance.Id, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.FileUuid, instance.Hash, instance.Size, "", map[string]interface{}{})
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
@@ -191,10 +159,10 @@ InstanceTags.tagGroup as tagGroup,
 InstanceTags.tagElement as tagElement,
 InstanceTags.value as value
 FROM Resources resourseInstance
-left join(SELECT * FROM Resources where resourceType = 2) resourseSerie on resourseSerie.internalId = resourseInstance.parentId
-left join(SELECT * FROM Resources where resourceType = 1) resourseStudy on resourseStudy.internalId = resourseSerie.parentId
-left join(SELECT * FROM MainDicomTags) InstanceTags on InstanceTags.id = resourseInstance.internalId
-left join (SELECT * FROM AttachedFiles where fileType=1) InstanceFile on  InstanceFile.id = resourseInstance.internalId
+left join Resources resourseSerie on resourseSerie.internalId = resourseInstance.parentId AND resourseSerie.resourceType = 2
+left join Resources resourseStudy on resourseStudy.internalId = resourseSerie.parentId AND resourseStudy.resourceType = 1
+left join MainDicomTags InstanceTags on InstanceTags.id = resourseInstance.internalId
+left join AttachedFiles InstanceFile on InstanceFile.id = resourseInstance.internalId AND InstanceFile.fileType = 1
 where resourseStudy.publicId=?
 ORDER BY resourseInstance.publicId;`
 	rows, err := i.client.Query(q, uuid)
@@ -203,30 +171,14 @@ ORDER BY resourseInstance.publicId;`
 	}
 	defer rows.Close()
 	var result []models.OrtMySQLv1InstanceType
-	var currentInstance models.OrtMySQLv1InstanceType = models.OrtMySQLv1InstanceType{
-		StudyUuid:    "",
-		SerieUuid:    "",
-		InstanceUuid: "",
-		Hash:         "",
-		Size:         0,
-		AE:           "",
-		Tags:         map[string]interface{}{},
-	}
+	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
-		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return nil, err
 		}
 		if instance.InstanceUuid != currentInstance.InstanceUuid {
-			currentInstance = models.OrtMySQLv1InstanceType{
-				StudyUuid:    instance.StudyUuid,
-				SerieUuid:    instance.SerieUuid,
-				InstanceUuid: instance.InstanceUuid,
-				Hash:         instance.Hash,
-				Size:         instance.Size,
-				AE:           instance.AE,
-				Tags:         map[string]interface{}{},
-			}
+			currentInstance = models.NewOrtMySQLv1InstanceType(instance.Id, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.FileUuid, instance.Hash, instance.Size, "", map[string]interface{}{})
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)
@@ -261,30 +213,14 @@ order by StudyResourse.publicId,SeriesResourse.publicId;`
 	}
 	defer rows.Close()
 	var result []models.OrtMySQLv1InstanceType
-	var currentInstance models.OrtMySQLv1InstanceType = models.OrtMySQLv1InstanceType{
-		StudyUuid:    "",
-		SerieUuid:    "",
-		InstanceUuid: "",
-		Hash:         "",
-		Size:         0,
-		AE:           "",
-		Tags:         map[string]interface{}{},
-	}
+	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
-		if err := rows.Scan(&instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.Hash, &instance.Size, &instance.AE, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
+		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return nil, err
 		}
 		if instance.InstanceUuid != currentInstance.InstanceUuid {
-			currentInstance = models.OrtMySQLv1InstanceType{
-				StudyUuid:    instance.StudyUuid,
-				SerieUuid:    instance.SerieUuid,
-				InstanceUuid: instance.InstanceUuid,
-				Hash:         instance.Hash,
-				Size:         instance.Size,
-				AE:           instance.AE,
-				Tags:         map[string]interface{}{},
-			}
+			currentInstance = models.NewOrtMySQLv1InstanceType(instance.Id, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.FileUuid, instance.Hash, instance.Size, "", map[string]interface{}{})
 			result = append(result, currentInstance)
 		}
 		tag := utils.Dec2Hex(instance.TagGroup, instance.TagElement)

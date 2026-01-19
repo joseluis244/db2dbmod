@@ -3,36 +3,29 @@ package instance
 import (
 	"context"
 
-	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
+	"github.com/joseluis244/db2dbmod/databases/symongov1/models"
 	"github.com/joseluis244/db2dbmod/databases/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func createInstance(DealerID string, ClientID string, BranchID string, StudyUuid string, SerieUuid string, InstanceUuid string, Ae string, CreatedAt int64, Tags map[string]interface{}, updatedAt int64, hash string, size int64, path string, store string) bson.M {
+func createInstance(InstanceUuid string, Ae string, SerieUuid string, StudyUuid string, updatedAt int64, Tags map[string]interface{}, hash string, size int64, path string) bson.M {
 	return bson.M{
 		"$setOnInsert": bson.M{
-			"DealerID":     DealerID,
-			"ClientID":     ClientID,
-			"BranchID":     BranchID,
-			"StudyUuid":    StudyUuid,
-			"SerieUuid":    SerieUuid,
-			"InstanceUuid": InstanceUuid,
-			"Ae":           Ae,
-			"CreatedAt":    CreatedAt,
-			"Sync": models.SyncType{
-				Status:   "pending",
-				SyncTime: 0,
-			},
+			"Uuid":      InstanceUuid,
+			"Ae":        Ae,
+			"Id":        4,
+			"SerieUuid": SerieUuid,
+			"StudyUuid": StudyUuid,
 		},
 		"$set": bson.M{
-			"Tags":      Tags,
-			"UpdatedAt": updatedAt,
+			"CloudSync": 0,
 			"Hash":      hash,
-			"Size":      size,
 			"Path":      path,
-			"Store":     store,
+			"Size":      size,
+			"Update":    updatedAt,
+			"tags":      Tags,
 		},
 	}
 }
@@ -68,11 +61,11 @@ func New(client *mongo.Client, db string, collection string) *InstanceStruct {
 	}
 }
 
-func (i *InstanceStruct) UpsertInstances(instances []models.DestinationInstanceType) error {
+func (i *InstanceStruct) UpsertInstances(instances []models.SyMongoV1InstanceType) error {
 	Models := []mongo.WriteModel{}
 	for _, instance := range instances {
-		filter := bson.M{"InstanceUuid": instance.InstanceUuid}
-		update := createInstance(instance.DealerID, instance.ClientID, instance.BranchID, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.Ae, instance.CreatedAt, instance.Tags, instance.UpdatedAt, instance.Hash, instance.Size, instance.Path, instance.Store)
+		filter := bson.M{"Uuid": instance.Uuid}
+		update := createInstance(instance.Uuid, instance.Ae, instance.SerieUuid, instance.StudyUuid, instance.Update, instance.Tags, instance.Hash, instance.Size, instance.Path)
 		Model := mongo.NewUpdateOneModel()
 		Model.SetFilter(filter)
 		Model.SetUpdate(update)
@@ -86,11 +79,11 @@ func (i *InstanceStruct) UpsertInstances(instances []models.DestinationInstanceT
 	return nil
 }
 
-func (i *InstanceStruct) UpsertInstance(instance models.DestinationInstanceType) error {
+func (i *InstanceStruct) UpsertInstance(instance models.SyMongoV1InstanceType) error {
 	opt := options.UpdateOne()
 	opt.SetUpsert(true)
-	filter := bson.M{"InstanceUuid": instance.InstanceUuid}
-	update := createInstance(instance.DealerID, instance.ClientID, instance.BranchID, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.Ae, instance.CreatedAt, instance.Tags, instance.UpdatedAt, instance.Hash, instance.Size, instance.Path, instance.Store)
+	filter := bson.M{"Uuid": instance.Uuid}
+	update := createInstance(instance.Uuid, instance.Ae, instance.SerieUuid, instance.StudyUuid, instance.Update, instance.Tags, instance.Hash, instance.Size, instance.Path)
 	_, err := i.collection.UpdateOne(i.ctx, filter, update, opt)
 	if err != nil {
 		return err
@@ -99,21 +92,8 @@ func (i *InstanceStruct) UpsertInstance(instance models.DestinationInstanceType)
 }
 
 func (i *InstanceStruct) SetUpdatedAt(uuid string, updatedAt int64) error {
-	filter := bson.M{"InstanceUuid": uuid}
-	update := bson.M{"$set": bson.M{"UpdatedAt": updatedAt}}
-	_, err := i.collection.UpdateOne(i.ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (i *InstanceStruct) SetSync(uuid string, status string, syncTime int64) error {
-	filter := bson.M{"InstanceUuid": uuid}
-	update := bson.M{"$set": bson.M{"Sync": models.SyncType{
-		Status:   status,
-		SyncTime: syncTime,
-	}}}
+	filter := bson.M{"Uuid": uuid}
+	update := bson.M{"$set": bson.M{"Update": updatedAt}}
 	_, err := i.collection.UpdateOne(i.ctx, filter, update)
 	if err != nil {
 		return err

@@ -3,7 +3,7 @@ package study
 import (
 	"context"
 
-	"github.com/joseluis244/db2dbmod/databases/symongov2/models"
+	"github.com/joseluis244/db2dbmod/databases/symongov1/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -36,22 +36,18 @@ func New(client *mongo.Client, db string, collection string) *StudyStruct {
 	}
 }
 
-func (s *StudyStruct) FindByStudyUuid(studyUuid string) (models.DestinationStudyType, error) {
-	var study models.DestinationStudyType
+func (s *StudyStruct) FindByStudyUuid(studyUuid string) (models.SyMongoV1StudyType, error) {
+	var study models.SyMongoV1StudyType
 	err := s.collection.FindOne(s.ctx, bson.M{
 		"StudyUuid": studyUuid,
 	}).Decode(&study)
 	if err != nil {
-		return models.DestinationStudyType{}, err
+		return models.SyMongoV1StudyType{}, err
 	}
 	return study, nil
 }
 
-func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
-	Study     models.DestinationStudyType
-	Series    []models.DestinationSeriesType
-	Instances []models.DestinationInstanceType
-}, error) {
+func (s *StudyStruct) GetToBuild(filter bson.M) ([]models.SyMongoV1ToBuildStruct, error) {
 	Aggr := bson.A{
 		bson.M{"$match": filter},
 		bson.M{
@@ -82,9 +78,9 @@ func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
 	defer cursor.Close(s.ctx) // IMPORTANTE: cerrar el cursor
 
 	var responses []struct {
-		models.DestinationStudyType `bson:",inline"`
-		Series                      []models.DestinationSeriesType   `bson:"Series"`
-		Instances                   []models.DestinationInstanceType `bson:"Instances"`
+		models.SyMongoV1StudyType `bson:",inline"`
+		Series                    []models.SyMongoV1SeriesType   `bson:"Series"`
+		Instances                 []models.SyMongoV1InstanceType `bson:"Instances"`
 	}
 
 	// Verificar error del cursor.All
@@ -93,27 +89,15 @@ func (s *StudyStruct) GetToBuild(filter bson.M) ([]struct {
 	}
 
 	// Simplificar: retornar directamente sin conversión innecesaria
-	var res []struct {
-		Study     models.DestinationStudyType
-		Series    []models.DestinationSeriesType
-		Instances []models.DestinationInstanceType
-	}
+	var res []models.SyMongoV1ToBuildStruct
 
 	for _, response := range responses {
-		res = append(res, struct {
-			Study     models.DestinationStudyType
-			Series    []models.DestinationSeriesType
-			Instances []models.DestinationInstanceType
-		}{
-			Study:     response.DestinationStudyType,
+		res = append(res, models.SyMongoV1ToBuildStruct{
+			Study:     response.SyMongoV1StudyType,
 			Series:    response.Series,
 			Instances: response.Instances,
 		})
 	}
 
 	return res, nil
-}
-
-func (s *StudyStruct) GetToSync() ([]models.DestinationStudyType, error) {
-	return nil, nil
 }
