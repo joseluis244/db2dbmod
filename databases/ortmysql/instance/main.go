@@ -206,7 +206,7 @@ left join Resources StudyResourse on StudyResourse.internalId=SeriesResourse.par
 left join MainDicomTags InstanceTags on InstanceResourse.internalId=InstanceTags.id
 left join AttachedFiles InstanceFile on  InstanceFile.id = InstanceResourse.internalId and InstanceFile.fileType=1
 where InstanceChange.changeType=2 and (InstanceChange.seq>=? and InstanceChange.seq<=?)
-order by StudyResourse.publicId,SeriesResourse.publicId;`
+order by StudyResourse.publicId,SeriesResourse.publicId,InstanceResourse.publicId;`
 	rows, err := i.client.Query(q, from, to)
 	if err != nil {
 		return nil, err

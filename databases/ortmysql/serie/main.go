@@ -133,7 +133,7 @@ left join Resources SeriesResourse on SeriesResourse.internalId=SeriesChange.int
 left join Resources StudyResourse on StudyResourse.internalId=SeriesResourse.parentId and StudyResourse.resourceType=1
 left join MainDicomTags SeriesTags on SeriesResourse.internalId=SeriesTags.id
 where SeriesChange.changeType=4 and (SeriesChange.seq>=? and SeriesChange.seq<=?)
-order by StudyResourse.publicId;`
+order by StudyResourse.publicId,SeriesResourse.publicId;`
 	rows, err := s.client.Query(q, from, to)
 	if err != nil {
 		return nil, err

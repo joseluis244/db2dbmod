@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/joseluis244/db2dbmod/builder"
 	"github.com/joseluis244/db2dbmod/databases"
 )
 
@@ -11,11 +12,12 @@ var t = time.Now()
 
 func main() {
 	localsource := databases.OrtMySql.New()
-	err := localsource.Connect("medicaltecmysql:Medicaltec310188$@tcp(127.0.0.1:3306)/medicaltec")
+	err := localsource.Connect("medicaresoftmysql:MedicareSoft203$@tcp(127.0.0.1:3308)/symphony")
 	if err != nil {
 		panic(err)
 	}
 	defer localsource.Disconnect()
+	Builder := builder.OrtMySQL2MongoV1.New()
 	lastChange, err := localsource.Change.LastChange()
 	if err != nil {
 		panic(err)
@@ -25,17 +27,29 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Studies: ", studies[0])
+	bstudies, err := Builder.Study.BuildMany(studies)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Studies: ", bstudies[0])
 	series, err := localsource.Serie.GetSerieByChangeRange(0, lastChange)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Series: ", series[0])
+	bseries, err := Builder.Series.BuildMany(series)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Series: ", bseries[0])
 	instances, err := localsource.Instance.GetInstanceByChangeRange(0, lastChange)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Instances: ", instances[0])
+	binstances, err := Builder.Instance.BuildMany(instances)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Instances: ", binstances[0])
 	fmt.Println("Time consume: ", time.Since(t))
 }
 
