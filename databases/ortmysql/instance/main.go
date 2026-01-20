@@ -226,6 +226,9 @@ order by StudyResourse.publicId,SeriesResourse.publicId,InstanceResourse.publicI
 		acumulator = append(acumulator, instance)
 	}
 	defer rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	//construccion de instancia
 	var result []models.OrtMySQLv1InstanceType
 	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
