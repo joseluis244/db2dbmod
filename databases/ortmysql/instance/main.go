@@ -2,6 +2,7 @@ package instance
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/joseluis244/db2dbmod/databases/ortmysql/models"
 	"github.com/joseluis244/db2dbmod/utils"
@@ -207,18 +208,28 @@ left join MainDicomTags InstanceTags on InstanceResourse.internalId=InstanceTags
 left join AttachedFiles InstanceFile on  InstanceFile.id = InstanceResourse.internalId and InstanceFile.fileType=1
 where InstanceChange.changeType=2 and (InstanceChange.seq>=? and InstanceChange.seq<=?)
 order by StudyResourse.publicId,SeriesResourse.publicId,InstanceResourse.publicId;`
-	rows, err := i.client.Query(q, from, to)
+
+	var acumulator []models.OrtInstanceRaw
+	var rows *sql.Rows
+	var err error
+	//consultas
+	rows, err = i.client.Query(q, from, to)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	var result []models.OrtMySQLv1InstanceType
-	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
 	for rows.Next() {
 		instance := models.OrtInstanceRaw{}
 		if err := rows.Scan(&instance.Id, &instance.StudyUuid, &instance.SerieUuid, &instance.InstanceUuid, &instance.FileUuid, &instance.Size, &instance.Hash, &instance.TagGroup, &instance.TagElement, &instance.Value); err != nil {
 			return nil, err
 		}
+		fmt.Println("Instance: ", instance.InstanceUuid)
+		acumulator = append(acumulator, instance)
+	}
+	defer rows.Close()
+	//construccion de instancia
+	var result []models.OrtMySQLv1InstanceType
+	var currentInstance models.OrtMySQLv1InstanceType = models.NewOrtMySQLv1InstanceType(0, "", "", "", "", "", 0, "", map[string]interface{}{})
+	for _, instance := range acumulator {
 		if instance.InstanceUuid != currentInstance.InstanceUuid {
 			currentInstance = models.NewOrtMySQLv1InstanceType(instance.Id, instance.StudyUuid, instance.SerieUuid, instance.InstanceUuid, instance.FileUuid, instance.Hash, instance.Size, "", map[string]interface{}{})
 			result = append(result, currentInstance)
